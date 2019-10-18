@@ -2,7 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-class Checker():
+class Checker:
+    """
+    a checkerboard pattern with adaptable tile size and resolution.
+    """
 
     def __init__(self, resolution, tile_size):
         '''
@@ -15,9 +18,9 @@ class Checker():
 
     def draw(self):
         assert self.resolution % 2*(self.tile_size) == 0
-        # number of the tiles
+        # half of the number of the tiles
         half_tiles_num = int(self.resolution/(2*self.tile_size))
-        self.output = np.array([[0,1],[1,0]])
+        self.output = np.array([[0,1],[1,0.0]])
         self.output = np.tile(self.output, (half_tiles_num, half_tiles_num))
         return self.output
 
@@ -27,7 +30,10 @@ class Checker():
 
 
 
-class Spectrum():
+class Spectrum:
+    '''
+    an RGB color spectrum.
+    '''
 
     def __init__(self, resolution):
         """
@@ -52,7 +58,29 @@ class Spectrum():
 
 
 
-class Circle():
+class Circle:
+    '''
+    a binary circle with a given radius at a specified position in the image.
+    '''
 
-    def __init__(self):
-        pass
+    def __init__(self, resolution, radius, position):
+        """
+        :type position: tuple, describes the position of the circle center in the image.
+        :type radius: integer, describes the radius of the circle.
+        :type resolution: integer
+        """
+        self.resolution = resolution
+        self.radius = radius
+        self.position = position
+
+    def draw(self):
+        self.output = np.zeros((self.resolution, self.resolution))
+        y, x = np.ogrid[0:self.resolution, 0:self.resolution]
+        mask = ((x - self.position[0]) ** 2 + (y - self.position[1]) ** 2 < self.radius ** 2)
+        self.output[mask] = 1.0
+        return self.output
+
+
+    def show(self):
+        plt.imshow(self.output)
+        plt.show()
