@@ -11,7 +11,7 @@ class Checker():
         '''
         self.resolution = resolution
         self.tile_size = tile_size
-        self.output = []
+        self.output = np.array([])
 
     def draw(self):
         assert self.resolution % 2*(self.tile_size) == 0
@@ -27,15 +27,28 @@ class Checker():
 
 
 
-
-
-
-
 class Spectrum():
 
-    def __init__(self):
-        pass
+    def __init__(self, resolution):
+        """
+        :type resolution: int
+        """
+        self.resolution = resolution
+        self.output = np.zeros([self.resolution, self.resolution, 3])  # init the array
 
+    def draw(self):
+        # Red channel
+        self.output[:, :, 0] = np.linspace(0.0, 1.0, self.resolution)
+        # Blue channel
+        self.output[:, :, 2] = np.linspace(1.0, 0.0, self.resolution)
+        # Green channel
+        self.output[:, :, 1] = np.linspace(0.0, 1.0, self.resolution)
+        self.output[:, :, 1] = self.output[:, :, 1].T #transposing the green matrix
+        return self.output
+
+    def show(self):
+        plt.imshow(self.output)
+        plt.show()
 
 
 
