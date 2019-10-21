@@ -25,7 +25,7 @@ class Checker:
         return self.output
 
     def show(self):
-        plt.imshow(self.output)
+        plt.imshow(self.output, cmap='gray')
         plt.show()
 
 
@@ -82,5 +82,5 @@ class Circle:
 
 
     def show(self):
-        plt.imshow(self.output)
+        plt.imshow(self.output, cmap='gray')
         plt.show()
