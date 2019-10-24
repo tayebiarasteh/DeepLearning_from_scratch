@@ -1,6 +1,6 @@
 import os.path
 import json
-import scipy.misc
+from scipy import ndimage, misc
 import numpy as np
 import matplotlib.pyplot as plt
 import math
@@ -27,6 +27,9 @@ class ImageGenerator:
         self.batch_size = batch_size
         self.image_size = image_size
         self.shuffle = shuffle
+        self.mirroring = mirroring
+        self.rotation = rotation
+
         self.counter = 0    # shows the number of times next() has been called for each object of the class.
 
     def next(self):
@@ -59,6 +62,9 @@ class ImageGenerator:
             images.append(np.load(os.path.join(self.path[0], str(i) + '.npy')))
             labels.append(label_file[str(i)])
 
+        for i, image in enumerate(images):
+            images[i] = self.augment(image)
+
         self.counter += 1
         return (images, labels)
 
@@ -66,6 +72,20 @@ class ImageGenerator:
         # this function takes a single image as an input and performs a random transformation
         # (mirroring and/or rotation) on it and outputs the transformed image
         #TODO: implement augmentation function
+
+        # mirroring (randomly)
+        if self.mirroring:
+            i = np.random.randint(0, 2, 1) # randomness
+            if i[0] == 1: # 0: no | 1: yes
+                img = np.fliplr(img)
+
+        # rotation (randomly)
+        if self.rotation:
+            angles = [0, 90, 180, 270]
+            i = np.random.randint(0,4,1)
+            i = i[0]
+            i = angles[i]
+            img = ndimage.rotate(img, i, reshape=False)
 
         return img
 

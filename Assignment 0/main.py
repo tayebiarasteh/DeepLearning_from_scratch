@@ -31,5 +31,5 @@ Circle
 Generator
 '''
 
-sample_ImageGenerator = ImageGenerator('data/exercise_data/', 'data/Labels.json', 8, 0, False, False, True)
+sample_ImageGenerator = ImageGenerator('data/exercise_data/', 'data/Labels.json', 8, 0, True, True, True)
 sample_ImageGenerator.show()
