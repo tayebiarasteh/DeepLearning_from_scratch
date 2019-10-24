@@ -3,6 +3,8 @@ import json
 import scipy.misc
 import numpy as np
 import matplotlib.pyplot as plt
+import math
+import pdb
 
 # In this exercise task you will implement an image generator. Generator objects in python are defined as having a next function.
 # This next function returns the next generated object. In our case it returns the input of a neural network each time it gets called.
@@ -76,5 +78,22 @@ class ImageGenerator:
         # In order to verify that the generator creates batches as required, this functions calls next to get a
         # batch of images and labels and visualizes it.
         #TODO: implement show method
-        pass
+        images, labels = self.next()
+        for i, image in enumerate(images):
+            if self.batch_size > 3:
+                n_rows = math.ceil(self.batch_size/3) # number of rows to plot for subplot
+            else:
+                n_rows = 1
+            plt.subplot(n_rows, 3, i+1)
+            plt.title(self.class_name(labels[i]))
+            toPlot = plt.imshow(image)
+
+            # hiding the axes text
+            toPlot.axes.get_xaxis().set_visible(False)
+            toPlot.axes.get_yaxis().set_visible(False)
+        plt.show()
+
+
+
+
 

@@ -1,5 +1,5 @@
 from pattern import *
-from NumpyTests import *
+from generator import *
 import pdb
 
 
@@ -22,6 +22,14 @@ Spectrum
 Circle
 '''
 
-sample_circle = Circle(250, 50, (130,70))
-sample_circle.draw()
-sample_circle.show()
+# sample_circle = Circle(250, 50, (130,70))
+# sample_circle.draw()
+# sample_circle.show()
+
+#########################
+'''
+Generator
+'''
+
+sample_ImageGenerator = ImageGenerator('data/exercise_data/', 'data/Labels.json', 8, 0, False, False, True)
+sample_ImageGenerator.show()
