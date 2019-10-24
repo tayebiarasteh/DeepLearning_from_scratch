@@ -4,6 +4,7 @@ from scipy import ndimage, misc
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+from skimage.transform import resize
 import pdb
 
 # In this exercise task you will implement an image generator. Generator objects in python are defined as having a next function.
@@ -11,6 +12,9 @@ import pdb
 # This input consists of a batch of images and its corresponding labels.
 class ImageGenerator:
     def __init__(self, file_path, json_path, batch_size, image_size, rotation=False, mirroring=False, shuffle=False):
+        """
+        :type image_size: tuple
+        """
         # Define all members of your generator class object as global members here.
         # These need to include:
         # the batch size
@@ -29,8 +33,8 @@ class ImageGenerator:
         self.shuffle = shuffle
         self.mirroring = mirroring
         self.rotation = rotation
-
         self.counter = 0    # shows the number of times next() has been called for each object of the class.
+
 
     def next(self):
         # This function creates a batch of images and corresponding labels and returns it.
@@ -62,11 +66,17 @@ class ImageGenerator:
             images.append(np.load(os.path.join(self.path[0], str(i) + '.npy')))
             labels.append(label_file[str(i)])
 
+        # Resizing
+        for i, image in enumerate(images):
+            images[i] = resize(image, self.image_size)
+
+        # Augmentation
         for i, image in enumerate(images):
             images[i] = self.augment(image)
 
         self.counter += 1
         return (images, labels)
+
 
     def augment(self,img):
         # this function takes a single image as an input and performs a random transformation
@@ -89,10 +99,12 @@ class ImageGenerator:
 
         return img
 
+
     def class_name(self, int_label):
         # This function returns the class name for a specific input
         #TODO: implement class name function
         return self.class_dict[int_label]
+
 
     def show(self):
         # In order to verify that the generator creates batches as required, this functions calls next to get a
@@ -112,8 +124,3 @@ class ImageGenerator:
             toPlot.axes.get_xaxis().set_visible(False)
             toPlot.axes.get_yaxis().set_visible(False)
         plt.show()
-
-
-
-
-
