@@ -21,13 +21,13 @@ class FullyConnected:
         self.batch_size = input_tensor.shape[0]
 
         # random initialization of weights
-        weight_tensor = np.random.rand(self.input_size+1, self.output_size ) # W'
+        self.weights = np.random.rand(self.input_size+1, self.output_size ) # W'
 
         # adding an extra row of ones according to the slide 24 of "Neural Networks"
         input_tensor = np.concatenate((input_tensor, np.ones([self.batch_size, 1])), axis=1) # X'
 
         # Eq. 6 of "Neural Networks"
-        return np.matmul(input_tensor, weight_tensor)
+        return np.matmul(input_tensor, self.weights)
 
 
     def backward(self, error_tensor):
@@ -35,24 +35,25 @@ class FullyConnected:
         :param error_tensor:
         :return: the error tensor for the next layer.
         '''
-        return error_tensor
+
+        # the test file is not correct here, because it's not considering the bias in the 2nd dim of the input.
+        return np.matmul(error_tensor, self.weights.T)
 
 
 
     def set_optimizer(self, optimizer):
-        pass
+        self._optimizer = optimizer
 
+        # property optimizer: sets and returns the protected member _optimizer for this layer.
+        @property
+        def optimizer(self):
+            """I'm the 'optimizer' property."""
+            return self._optimizer
 
-    # property optimizer: sets and returns the protected member _optimizer for this layer.
-    @property
-    def optimizer(self):
-        """I'm the 'optimizer' property."""
-        return self._optimizer
-
-    @optimizer.setter
-    def optimizer(self, value):
-        self._optimizer = value
-
-    @optimizer.deleter
-    def optimizer(self):
-        del self._optimizer
+        @optimizer.setter
+        def optimizer(self, value):
+            self._optimizer = value
+    
+        @optimizer.deleter
+        def optimizer(self):
+            del self._optimizer
