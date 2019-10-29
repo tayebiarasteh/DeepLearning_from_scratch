@@ -1,4 +1,5 @@
 import numpy as np
+import pdb
 
 class FullyConnected:
 
@@ -17,7 +18,16 @@ class FullyConnected:
             and rows of size batch_size representing the number of inputs processed simultaneously.
         :return: the input_tensor for the next layer.
         '''
-        return input_tensor
+        self.batch_size = input_tensor.shape[0]
+
+        # random initialization of weights
+        weight_tensor = np.random.rand(self.input_size+1, self.output_size ) # W'
+
+        # adding an extra row of ones according to the slide 24 of "Neural Networks"
+        input_tensor = np.concatenate((input_tensor, np.ones([self.batch_size, 1])), axis=1) # X'
+
+        # Eq. 6 of "Neural Networks"
+        return np.matmul(input_tensor, weight_tensor)
 
 
     def backward(self, error_tensor):
