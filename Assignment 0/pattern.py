@@ -20,9 +20,13 @@ class Checker:
         assert self.resolution % 2*(self.tile_size) == 0
         # half of the number of the tiles
         half_tiles_num = int(self.resolution/(2*self.tile_size))
-        self.output = np.array([[0,1],[1,0.0]])
+        temp1 = np.concatenate((np.zeros([1,self.tile_size]), np.ones([1,self.tile_size])), axis=1)
+        temp1 = np.tile(temp1, (self.tile_size,1))
+        temp2 = np.concatenate((np.ones([1,self.tile_size]), np.zeros([1,self.tile_size])), axis=1)
+        temp2 = np.tile(temp2, (self.tile_size,1))
+        self.output = np.concatenate((temp1, temp2), axis=0)
         self.output = np.tile(self.output, (half_tiles_num, half_tiles_num))
-        return self.output
+        return np.copy(self.output)
 
     def show(self):
         plt.imshow(self.output, cmap='gray')
@@ -50,7 +54,7 @@ class Spectrum:
         # Green channel
         self.output[:, :, 1] = np.linspace(0.0, 1.0, self.resolution)
         self.output[:, :, 1] = self.output[:, :, 1].T #transposing the green matrix
-        return self.output
+        return np.copy(self.output)
 
     def show(self):
         plt.imshow(self.output)
@@ -78,7 +82,7 @@ class Circle:
         y, x = np.ogrid[0:self.resolution, 0:self.resolution]
         mask = ((x - self.position[0]) ** 2 + (y - self.position[1]) ** 2 < self.radius ** 2)
         self.output[mask] = 1.0
-        return self.output
+        return np.copy(self.output)
 
 
     def show(self):
