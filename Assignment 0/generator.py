@@ -42,12 +42,14 @@ class ImageGenerator:
         # Think about how to handle such cases
         #TODO: implement next method
 
-        images = [] # a batch (list) of images
-        labels = [] # the corresponding labels
 
         with open(self.path[1]) as data_file:
             label_file = json.load(data_file)
         all_images_indices = np.arange(len(label_file)) # indices of all the images in the dataset in a numpy array.
+
+        images = [] # a batch (list) of images
+        labels = [] # the corresponding labels
+
         if self.shuffle:
             np.random.shuffle(all_images_indices)
 
@@ -57,7 +59,8 @@ class ImageGenerator:
             offset = (self.counter+1)*self.batch_size - len(label_file)
             chosen_batch = all_images_indices[
                            self.counter * self.batch_size :len(label_file)]
-            chosen_batch.append(all_images_indices[0:offset])
+            # pdb.set_trace()
+            np.append(chosen_batch, all_images_indices[0:offset])
             self.counter = -1   # at the end of the method with +1, it becomes zero and we basically reset our counter.
         else:
             chosen_batch = all_images_indices[self.counter*self.batch_size:(self.counter+1)*self.batch_size]
@@ -74,8 +77,13 @@ class ImageGenerator:
         for i, image in enumerate(images):
             images[i] = self.augment(image)
 
+        # converting list to np array
+        labels = np.asarray(labels)
+        images = np.asarray(images)
+
         self.counter += 1
-        return (images, labels)
+        output = (images, labels)
+        return output
 
 
     def augment(self,img):
