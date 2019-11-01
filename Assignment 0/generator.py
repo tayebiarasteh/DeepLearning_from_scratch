@@ -34,6 +34,7 @@ class ImageGenerator:
         self.mirroring = mirroring
         self.rotation = rotation
         self.counter = 0    # shows the number of times next() has been called for each object of the class.
+                            # if  self.counter =! 0 means that we have not created a new object.
 
 
     def next(self):
@@ -50,7 +51,7 @@ class ImageGenerator:
         images = [] # a batch (list) of images
         labels = [] # the corresponding labels
 
-        if self.shuffle:
+        if self.counter == 0 and self.shuffle:
             np.random.shuffle(all_images_indices)
 
         '''If the last batch is smaller than the others, 
@@ -59,8 +60,7 @@ class ImageGenerator:
             offset = (self.counter+1)*self.batch_size - len(label_file)
             chosen_batch = all_images_indices[
                            self.counter * self.batch_size :len(label_file)]
-            # pdb.set_trace()
-            np.append(chosen_batch, all_images_indices[0:offset])
+            chosen_batch = np.append(chosen_batch, all_images_indices[0:offset])
             self.counter = -1   # at the end of the method with +1, it becomes zero and we basically reset our counter.
         else:
             chosen_batch = all_images_indices[self.counter*self.batch_size:(self.counter+1)*self.batch_size]
