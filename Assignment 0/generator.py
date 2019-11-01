@@ -51,7 +51,7 @@ class ImageGenerator:
         images = [] # a batch (list) of images
         labels = [] # the corresponding labels
 
-        if self.counter == 0 and self.shuffle:
+        if self.shuffle:
             np.random.shuffle(all_images_indices)
 
         '''If the last batch is smaller than the others, 
@@ -73,6 +73,7 @@ class ImageGenerator:
         for i, image in enumerate(images):
             images[i] = resize(image, self.image_size)
 
+        # pdb.set_trace()
         # Augmentation
         for i, image in enumerate(images):
             images[i] = self.augment(image)
@@ -103,7 +104,7 @@ class ImageGenerator:
             i = np.random.randint(0,4,1)
             i = i[0]
             i = angles[i]
-            img = ndimage.rotate(img, i, reshape=False)
+            img = ndimage.rotate(img, i, reshape=True)
 
         return img
 
