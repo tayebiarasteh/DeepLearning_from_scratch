@@ -11,7 +11,6 @@ class SoftMax:
         '''
         returns the estimated class probabilities for each row representing an element of the batch.'''
 
-
         X_hat = input_tensor - np.max(input_tensor) #to increase numerical stability
         # Eq. 10
         nom = np.exp(X_hat)
