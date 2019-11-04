@@ -1,4 +1,5 @@
 import numpy as np
+from Optimization import *
 import pdb
 
 class FullyConnected:
@@ -9,7 +10,10 @@ class FullyConnected:
         '''
         self.input_size = input_size
         self.output_size = output_size
-        self._optimizer = 0
+        # random initialization of weights (including bias in the weight matrix).
+        self.weights = np.random.rand(self.input_size + 1, self.output_size ) # W'
+        self._optimizer = Optimizers.Sgd(0)
+        self._gradient_weights = 0
 
 
     def forward(self, input_tensor):
@@ -19,9 +23,6 @@ class FullyConnected:
         :return: the input_tensor for the next layer.
         '''
         self.batch_size = input_tensor.shape[0]
-
-        # random initialization of weights
-        self.weights = np.random.rand(self.input_size+1, self.output_size ) # W'
 
         # adding an extra row of ones according to the slide 24 of "Neural Networks"
         input_tensor = np.concatenate((input_tensor, np.ones([self.batch_size, 1])), axis=1) # X'
@@ -36,24 +37,39 @@ class FullyConnected:
         :return: the error tensor for the next layer.
         '''
 
-        # the test file is not correct here, because it's not considering the bias in the 2nd dim of the input.
-        return np.matmul(error_tensor, self.weights.T)
+        # updating the weights
+        # set_optimizer(sgd)
+        self.weights = self._optimizer.calculate_update(self.weights, self._gradient_weights)
+        input_tensor = np.matmul(error_tensor, self.weights.T)
+        return input_tensor[:,:-1]
 
 
 
-    def set_optimizer(self, optimizer):
-        self._optimizer = optimizer
+    # property optimizer: sets and returns the protected member _optimizer for this layer.
+    @property
+    def optimizer(self):
+        """I'm the 'optimizer' property."""
+        return self._optimizer
 
-        # property optimizer: sets and returns the protected member _optimizer for this layer.
-        @property
-        def optimizer(self):
-            """I'm the 'optimizer' property."""
-            return self._optimizer
+    @optimizer.setter
+    def optimizer(self, value):
+        self._optimizer = value
 
-        @optimizer.setter
-        def optimizer(self, value):
-            self._optimizer = value
-    
-        @optimizer.deleter
-        def optimizer(self):
-            del self._optimizer
+    @optimizer.deleter
+    def optimizer(self):
+        del self._optimizer
+
+
+    # property gradient_weights: sets and returns the protected member _gradient_weights for this layer.
+    @property
+    def gradient_weights(self):
+        """I'm the 'gradient_weights' property."""
+        return self._gradient_weights
+
+    @gradient_weights.setter
+    def gradient_weights(self, value):
+        self._gradient_weights = value
+
+    @gradient_weights.deleter
+    def gradient_weights(self):
+        del self._gradient_weights
