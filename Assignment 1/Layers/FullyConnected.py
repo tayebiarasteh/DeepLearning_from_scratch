@@ -10,6 +10,7 @@ class FullyConnected:
         '''
         self.input_size = input_size
         self.output_size = output_size
+
         # random initialization of weights (including bias in the weight matrix).
         self.weights = np.random.rand(self.input_size + 1, self.output_size ) # W'
         # optimizer temporary constructor
@@ -56,9 +57,15 @@ class FullyConnected:
         """I'm the 'optimizer' property."""
         return self._optimizer
 
+
     @optimizer.setter
     def optimizer(self, value):
         self._optimizer = value
+
+        # the test file is not correct here, because it's not considering the bias in the 2nd dim of the input.
+        input_tensor = np.matmul(error_tensor, self.weights.T)
+        return input_tensor[:,:-1]
+
 
     @optimizer.deleter
     def optimizer(self):
