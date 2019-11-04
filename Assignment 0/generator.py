@@ -5,7 +5,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 from skimage.transform import resize
-import pdb
 
 # In this exercise task you will implement an image generator. Generator objects in python are defined as having a next function.
 # This next function returns the next generated object. In our case it returns the input of a neural network each time it gets called.
@@ -73,7 +72,6 @@ class ImageGenerator:
         for i, image in enumerate(images):
             images[i] = resize(image, self.image_size)
 
-        # pdb.set_trace()
         # Augmentation
         for i, image in enumerate(images):
             images[i] = self.augment(image)
@@ -100,11 +98,9 @@ class ImageGenerator:
 
         # rotation (randomly)
         if self.rotation:
-            angles = [0, 90, 180, 270]
             i = np.random.randint(0,4,1)
             i = i[0]
-            i = angles[i]
-            img = ndimage.rotate(img, i, reshape=True)
+            img = np.rot90(img, i)
 
         return img
 
