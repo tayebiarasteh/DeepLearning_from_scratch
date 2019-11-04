@@ -11,6 +11,7 @@ class SoftMax:
         '''
         returns the estimated class probabilities for each row representing an element of the batch.'''
 
+
         X_hat = input_tensor - np.max(input_tensor) #to increase numerical stability
         # Eq. 10
         nom = np.exp(X_hat)
@@ -23,8 +24,10 @@ class SoftMax:
     def backward(self, error_tensor):
         '''
         returns the error tensor for the next layer.'''
+
         # Eq. 11
         temp1 = np.sum(error_tensor * self.pred, axis=1)
         temp1 = np.expand_dims(temp1, axis=1) # np.expand_dims() because it should be a column vector.
         temp2 = error_tensor - temp1
         return self.pred * temp2
+
