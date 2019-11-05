@@ -9,6 +9,7 @@ class ReLU:
         '''
         returns the input_tensor for the next layer.
         '''
+        self.input_tensor = input_tensor
         return np.maximum(0, input_tensor) #element-wise
 
 
@@ -16,4 +17,4 @@ class ReLU:
         '''
         returns the error_tensor for the next layer.
         '''
-        return np.maximum(0, error_tensor) #element-wise
+        return np.where(self.input_tensor > 0, error_tensor, 0) #element-wise
