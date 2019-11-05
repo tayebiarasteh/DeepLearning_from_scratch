@@ -106,7 +106,7 @@ class TestCircle(unittest.TestCase):
         self.assertAlmostEqual(iou, 1.0, 1)
 
 
-def testReturnCopy(self):
+    def testReturnCopy(self):
         # Checks whether the output of the pattern is a copy of the output object rather than the output object itself.
 
         import pattern
