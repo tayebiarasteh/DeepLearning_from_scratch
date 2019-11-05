@@ -13,12 +13,12 @@ class CrossEntropyLoss:
         :param label_tensor: yk
         :return: Computes the Loss value according the CrossEntropy Loss formula accumulated over the batch.
         '''
-
         # Eq. 12
         self.input_tensor = input_tensor
+        input_tensor = input_tensor[label_tensor==1]
         temp1 = input_tensor + np.finfo(float).eps
         temp2 = np.log(temp1) * (-1)
-        return np.sum(temp2, axis=0)
+        return np.sum(temp2)
 
     def backward(self, label_tensor):
         '''
