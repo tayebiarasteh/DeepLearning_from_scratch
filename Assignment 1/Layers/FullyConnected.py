@@ -14,7 +14,7 @@ class FullyConnected:
         # random initialization of weights (including bias in the weight matrix).
         self.weights = np.random.rand(self.input_size + 1, self.output_size ) # W'
         # optimizer temporary constructor
-        self._optimizer = Optimizers.Sgd(0)
+        self._optimizer = None
         # temporary constructor
         self._gradient_weights = np.zeros_like(self.weights)
 
@@ -26,9 +26,9 @@ class FullyConnected:
         :return: the input_tensor for the next layer.
         '''
         self.batch_size = input_tensor.shape[0]
-        self.input_tensor = input_tensor
         # adding an extra row of ones according to the slide 24 of "Neural Networks"
         input_tensor = np.concatenate((input_tensor, np.ones([self.batch_size, 1])), axis=1) # X'
+        self.input_tensor = input_tensor
         # Eq. 6 of "Neural Networks"
         return np.matmul(input_tensor, self.weights)
 
@@ -40,11 +40,12 @@ class FullyConnected:
         '''
         # updating the weights
         # pdb.set_trace()
+        # gradient w.r.t. X (remove bias)
+        input_tensor = np.matmul(error_tensor, self.weights.T)
+        self.gradient_weights = np.matmul(self.input_tensor.T,error_tensor)
         if self._optimizer:
             self.weights = self._optimizer.calculate_update(self.weights, self._gradient_weights)
         # self.gradient_weights = np.matmul(self.input_tensor.T, error_tensor)
-        #gradient w.r.t. X (remove bias)
-        input_tensor = np.matmul(error_tensor, self.weights.T)
 
         #removing the bias column from the input.
         return input_tensor[:,:-1]
@@ -63,8 +64,8 @@ class FullyConnected:
         self._optimizer = value
 
         # the test file is not correct here, because it's not considering the bias in the 2nd dim of the input.
-        input_tensor = np.matmul(error_tensor, self.weights.T)
-        return input_tensor[:,:-1]
+        #input_tensor = np.matmul(error_tensor, self.weights.T)
+        #return input_tensor[:,:-1]
 
 
     @optimizer.deleter
@@ -85,3 +86,6 @@ class FullyConnected:
     @gradient_weights.deleter
     def gradient_weights(self):
         del self._gradient_weights
+
+
+ 
