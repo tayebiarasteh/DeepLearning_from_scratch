@@ -4,14 +4,18 @@ from Optimization import *
 
 
 class NeuralNetwork:
-
+    '''
+    The Neural Network defines the whole architecture by containing all its layers from the input
+    to the loss. This Network manages the testing and the training, that means it calls all forward
+    methods passing the data from the beginning to the end, as well as the optimization by calling
+    all backward passes afterwards.
+    '''
     def __init__(self, optimizer):
         '''
-        :param optimizer:
         loss: A list which will contain the loss value for each iteration after calling train.
         layers: A list which will hold the architecture.
-        data_layer: a member, which will provide input data and labels.
-        loss_layer: a member referring to the special layer providing loss and prediction
+        data_layer: a member, which will provide input data and labels upon calling forward() on it.
+        loss_layer: Loss functions of the network. A member referring to the special layer providing loss and prediction
         '''
         self.optimizer = optimizer
         self.loss = []
@@ -22,13 +26,10 @@ class NeuralNetwork:
 
     def forward(self):
         self.input_tensor, self.label_tensor = self.data_layer.forward()
-        input = self.input_tensor
         for layer in self.layers:
-            input = layer.forward(input)
-        self.prediction = input
-        loss = self.loss_layer.forward(input, self.label_tensor)
+            self.input_tensor = layer.forward(self.input_tensor)
+        loss = self.loss_layer.forward(self.input_tensor, self.label_tensor)
         self.loss.append(loss)
-
         return loss
 
 
@@ -44,7 +45,7 @@ class NeuralNetwork:
         self.layers.append(layer)
 
 
-    def train(self,iterations):
+    def train(self, iterations):
         for i in range(iterations):
             loss = self.forward()
             if (i+1)%50 == 0:
@@ -52,7 +53,7 @@ class NeuralNetwork:
             self.backward()
 
 
-    def test(self,input_tensor):
+    def test(self, input_tensor):
         '''
         propagates the input tensor through the network
         and returns the prediction of the last layer.
