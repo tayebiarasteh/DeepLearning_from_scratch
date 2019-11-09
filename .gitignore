@@ -23,3 +23,10 @@
 /Assignment 1/Layers/__pycache__/ReLU.cpython-37.pyc
 /Assignment 1/Optimization/__pycache__/Loss.cpython-37.pyc
 /Assignment 1/Layers/__pycache__/SoftMax.cpython-37.pyc
+/Assignment 1/__pycache__/NeuralNetwork.cpython-37.pyc
+/.idea/.gitignore
+/.idea/deep-learning-course.iml
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/vcs.xml
