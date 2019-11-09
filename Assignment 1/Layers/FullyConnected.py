@@ -1,6 +1,5 @@
 import numpy as np
 from Optimization import *
-import pdb
 
 class FullyConnected:
 
@@ -38,14 +37,12 @@ class FullyConnected:
         :param error_tensor:
         :return: the error tensor for the next layer.
         '''
-        # updating the weights
-        # pdb.set_trace()
-        # gradient w.r.t. X (remove bias)
         input_tensor = np.matmul(error_tensor, self.weights.T)
         self.gradient_weights = np.matmul(self.input_tensor.T,error_tensor)
+
+        # updating the weights
         if self._optimizer:
             self.weights = self._optimizer.calculate_update(self.weights, self._gradient_weights)
-        # self.gradient_weights = np.matmul(self.input_tensor.T, error_tensor)
 
         #removing the bias column from the input.
         return input_tensor[:,:-1]
@@ -58,15 +55,9 @@ class FullyConnected:
         """I'm the 'optimizer' property."""
         return self._optimizer
 
-
     @optimizer.setter
     def optimizer(self, value):
         self._optimizer = value
-
-        # the test file is not correct here, because it's not considering the bias in the 2nd dim of the input.
-        #input_tensor = np.matmul(error_tensor, self.weights.T)
-        #return input_tensor[:,:-1]
-
 
     @optimizer.deleter
     def optimizer(self):
@@ -86,6 +77,3 @@ class FullyConnected:
     @gradient_weights.deleter
     def gradient_weights(self):
         del self._gradient_weights
-
-
- 
