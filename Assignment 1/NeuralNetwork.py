@@ -1,7 +1,7 @@
 import numpy as np
 from Layers import *
 from Optimization import *
-
+import copy
 
 class NeuralNetwork:
     '''
@@ -40,8 +40,7 @@ class NeuralNetwork:
 
 
     def append_trainable_layer(self, layer):
-        # deep copy??? not working with np.copy(self.optimizer)
-        layer.optimizer = self.optimizer
+        layer.optimizer = copy.deepcopy(self.optimizer)
         self.layers.append(layer)
 
 
