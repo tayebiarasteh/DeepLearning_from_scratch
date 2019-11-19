@@ -36,3 +36,15 @@
 /Assignment 2/.idea/misc.xml
 /Assignment 2/.idea/modules.xml
 /Assignment 2/.idea/vcs.xml
+/Assignment 2/Layers/__pycache__/FullyConnected.cpython-37.pyc
+/Assignment 2/Layers/__pycache__/Helpers.cpython-37.pyc
+/Assignment 2/Layers/__pycache__/Initializers.cpython-37.pyc
+/Assignment 2/Layers/__pycache__/ReLU.cpython-37.pyc
+/Assignment 2/Layers/__pycache__/SoftMax.cpython-37.pyc
+/Assignment 2/Layers/__pycache__/__init__.cpython-37.pyc
+/Assignment 2/Optimization/__pycache__/Loss.cpython-37.pyc
+/Assignment 2/Optimization/__pycache__/Optimizers.cpython-37.pyc
+/Assignment 2/Optimization/__pycache__/__init__.cpython-37.pyc
+/Assignment 2/__pycache__/NeuralNetwork.cpython-37.pyc
+/Assignment 2/log.txt
+/Assignment 2/Layers/__pycache__/Flatten.cpython-37.pyc
