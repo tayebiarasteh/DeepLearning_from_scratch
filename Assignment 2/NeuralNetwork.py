@@ -10,7 +10,7 @@ class NeuralNetwork:
     methods passing the data from the beginning to the end, as well as the optimization by calling
     all backward passes afterwards.
     '''
-    def __init__(self, optimizer):
+    def __init__(self, optimizer, weights_initializer, bias_initializer):
         '''
         loss: A list which will contain the loss value for each iteration after calling train.
         layers: A list which will hold the architecture.
@@ -22,6 +22,8 @@ class NeuralNetwork:
         self.layers = []
         self.data_layer = []
         self.loss_layer = []
+        self.weights_initializer = weights_initializer
+        self.bias_initializer = bias_initializer
 
 
     def forward(self):
@@ -41,6 +43,7 @@ class NeuralNetwork:
 
     def append_trainable_layer(self, layer):
         layer.optimizer = copy.deepcopy(self.optimizer)
+        layer.weights = self.weights_initializer
         self.layers.append(layer)
 
 

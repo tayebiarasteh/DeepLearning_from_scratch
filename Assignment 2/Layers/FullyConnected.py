@@ -12,6 +12,7 @@ class FullyConnected:
 
         # random initialization of weights (including bias in the weight matrix).
         self.weights = np.random.rand(self.input_size + 1, self.output_size ) # W'
+        # self.weights = self.initialize() # W'
         # optimizer temporary constructor
         self._optimizer = None
         # temporary constructor
@@ -46,6 +47,12 @@ class FullyConnected:
 
         #removing the bias column from the input.
         return input_tensor[:,:-1]
+
+
+    def initialize(self, weights_initializer, bias_initializer):
+        weights = weights_initializer.initialize((self.output_size, self.input_size), self.input_size, self.output_size)
+        bias = bias_initializer.initialize(self.output_size)
+        return np.vstack(weights, bias)
 
 
 
