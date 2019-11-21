@@ -34,34 +34,40 @@ class Conv:
 
 
     def forward(self, input_tensor):
-        # pdb.set_trace()
         if len(self.convolution_shape)==3:
             result = np.zeros((input_tensor.shape[0], self.num_kernels, int(np.ceil(input_tensor.shape[2]/self.stride_shape[0])),
                                int(np.ceil(input_tensor.shape[3]/self.stride_shape[1]))))
         elif len(self.convolution_shape)==2:
             result = np.zeros((input_tensor.shape[0], self.num_kernels, int(np.ceil(input_tensor.shape[2]/self.stride_shape[0]))))
 
+        #a list to save the outputs of convolution for each channel
+        ch_conv_out = []
         #loop over batches
         for i in range(input_tensor.shape[0]):
 
             # loop over different kernels
             for ii in range(self.weights.shape[0]):
                 '''
-                # correlation gives an output with channels, we should sum it over channels to get a 2d one-channel image
-                # mode: determines the output shape (using padding), e.g. 'same' means the
-                    output have the same size as input (for a stride of 1), so pads in this way.
-                    'valid' means no zero-padding.
-                # this function works with "channels first"'''
-                temp1 = signal.correlate(input_tensor[i], self.weights[ii], mode='same', method='direct').sum(axis=0)
+                # mode: determines the output shape (using padding), e.g. 'same' means the output have the same
+                 size as input (for a stride of 1), so pads in this way. 'valid' means no zero-padding.'''
+
+                # loop over each channel of the kernel and input
+                for iii in range(self.weights.shape[1]):
+                    ch_conv_out.append(signal.correlate(input_tensor[i, iii], self.weights[ii, iii], mode='same', method='direct'))
+                temp2 = np.stack(ch_conv_out, axis=0)
+
+                # after stacking the output of the correlation of each channel,
+                # we should sum it over channels to get a 2d one-channel image
+                temp2 = temp2.sum(axis=0)
 
                 #stride implementation
                 if len(self.convolution_shape)==3:
-                    temp1 = temp1[::self.stride_shape[0],::self.stride_shape[1]]
+                    temp2 = temp2[::self.stride_shape[0],::self.stride_shape[1]]
                 elif len(self.convolution_shape)==2:
-                    temp1 = temp1[::self.stride_shape[0]]
+                    temp2 = temp2[::self.stride_shape[0]]
 
-                result[i,ii]= temp1
-
+                #each kernel has its own bias
+                result[i,ii]= temp2 + self.bias
         return result
 
 
