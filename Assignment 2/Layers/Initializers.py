@@ -12,7 +12,7 @@ class Constant:
         ''''
         returns an initialized tensor of the desired shape.
         '''
-        return (np.zeros(fan_in, fan_out) + self.weight_initialization)
+        return (np.zeros((fan_in, fan_out)) + self.weight_initialization)
 
 
 
