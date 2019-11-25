@@ -48,3 +48,7 @@
 /Assignment 2/__pycache__/NeuralNetwork.cpython-37.pyc
 /Assignment 2/log.txt
 /Assignment 2/Layers/__pycache__/Flatten.cpython-37.pyc
+/Assignment 2/Layers/__pycache__/Conv.cpython-37.pyc
+/Assignment 2/plots/TestNeuralNetwork.pdf
+/Assignment 2/plots/TestNeuralNetwork_ADAM.pdf
+/Assignment 2/plots/TestNeuralNetwork_Momentum.pdf

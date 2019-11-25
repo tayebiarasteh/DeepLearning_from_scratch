@@ -39,7 +39,7 @@ class FullyConnected:
         :return: the error tensor for the next layer.
         '''
         input_tensor = np.matmul(error_tensor, self.weights.T)
-        self.gradient_weights = np.matmul(self.input_tensor.T,error_tensor)
+        self.gradient_weights = np.matmul(self.input_tensor.T, error_tensor)
 
         # updating the weights
         if self._optimizer:
@@ -50,10 +50,13 @@ class FullyConnected:
 
 
     def initialize(self, weights_initializer, bias_initializer):
-        weights = weights_initializer.initialize((self.output_size, self.input_size), self.input_size, self.output_size)
-        bias = bias_initializer.initialize(self.output_size)
-        return np.vstack(weights, bias)
+        self.weights = weights_initializer.initialize((self.output_size, self.input_size), self.input_size, self.output_size)
+        self.bias = bias_initializer.initialize((1, self.output_size), 1, self.output_size)
+        self.weights = np.vstack((self.weights, self.bias))
 
+
+    def set_optimizer(self, optimizer):
+        self._optimizer = optimizer
 
 
     '''property optimizer: sets and returns the protected member _optimizer for this layer.'''
