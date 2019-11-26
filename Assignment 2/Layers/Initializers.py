@@ -2,6 +2,9 @@ import numpy as np
 
 
 class Constant:
+    '''
+    self.shape = (output_size, input_size)
+    '''
     def __init__(self, weight_initialization=0.1):
         '''
         :param weight_initialization: the constant value used for weight initialization.

@@ -35,10 +35,9 @@ class FullyConnected:
 
     def backward(self, error_tensor):
         '''
-        :param error_tensor:
         :return: the error tensor for the next layer.
         '''
-        input_tensor = np.matmul(error_tensor, self.weights.T)
+        gradient_input = np.matmul(error_tensor, self.weights.T)
         self.gradient_weights = np.matmul(self.input_tensor.T, error_tensor)
 
         # updating the weights
@@ -46,7 +45,7 @@ class FullyConnected:
             self.weights = self._optimizer.calculate_update(self.weights, self._gradient_weights)
 
         #removing the bias column from the input.
-        return input_tensor[:,:-1]
+        return gradient_input[:,:-1]
 
 
     def initialize(self, weights_initializer, bias_initializer):
@@ -62,28 +61,21 @@ class FullyConnected:
     '''property optimizer: sets and returns the protected member _optimizer for this layer.'''
     @property
     def optimizer(self):
-        """I'm the 'optimizer' property."""
         return self._optimizer
-
     @optimizer.setter
     def optimizer(self, value):
         self._optimizer = value
-
     @optimizer.deleter
     def optimizer(self):
         del self._optimizer
 
-
     '''property gradient_weights: sets and returns the protected member _gradient_weights for this layer.'''
     @property
     def gradient_weights(self):
-        """I'm the 'gradient_weights' property."""
         return self._gradient_weights
-
     @gradient_weights.setter
     def gradient_weights(self, value):
         self._gradient_weights = value
-
     @gradient_weights.deleter
     def gradient_weights(self):
         del self._gradient_weights
