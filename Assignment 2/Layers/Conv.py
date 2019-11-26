@@ -50,6 +50,9 @@ class Conv:
 
             # loop over different kernels
             for ii in range(self.weights.shape[0]):
+                # pdb.set_trace()
+                # element-wise addition of bias for every kernel, each kernel has its own bias.
+                # self.weights[ii] = self.weights[ii] + self.bias[ii]
                 '''
                 # mode: determines the output shape (using padding), e.g. 'same' means the output have the same
                  size as input (for a stride of 1), so pads in this way. 'valid' means no zero-padding.'''
@@ -68,8 +71,9 @@ class Conv:
                     temp2 = temp2[::self.stride_shape[0], ::self.stride_shape[1]]
                 elif len(self.convolution_shape)==2:
                     temp2 = temp2[::self.stride_shape[0]]
+                # pdb.set_trace()
 
-                #each kernel has its own bias
+                # element-wise addition of bias for every kernel, each kernel has its own bias.
                 result[i,ii]= temp2 + self.bias
         return result
 
@@ -80,6 +84,8 @@ class Conv:
         '''updates the parameters using the optimizer and returns the error tensor for the next layer'''
         # pdb.set_trace()
         result = np.zeros_like(self.input_tensor)
+        # self.gradient_weights = np.zeros_like(self.input_tensor)
+        # self.gradient_weights = np.zeros((self.input_tensor[0], self.input_tensor[1], self.input_tensor[3], self.input_tensor[3]))
         # rearranging the weights according to the slide 49
         if len(self.convolution_shape)==3:
             self.weights = np.transpose(self.weights, (1,0,2,3))
@@ -88,12 +94,17 @@ class Conv:
 
         # a list to save the outputs of convolution for each channel
         ch_conv_out = []
+        # ch_conv_out_grad = []
         #loop over batches
         for i in range(error_tensor.shape[0]):
             # loop over different kernels
             for ii in range(self.weights.shape[0]):
+                # self.weights[ii] = self.weights[ii] + self.bias[ii]
+
                 # loop over each channel of the kernel and input
                 for iii in range(self.weights.shape[1]):
+                    # self.gradient_weights[i,iii] = np.matmul(self.input_tensor[i,iii].T, error_tensor[i,iii])
+                    # ch_conv_out_grad.append(signal.convolve(self.input_tensor[i,iii], error_tensor[i,iii], mode='same', method='direct'))
 
                     # backward-stride (up-sampling) implementation
                     if len(self.convolution_shape) == 3:
@@ -108,23 +119,34 @@ class Conv:
 
                     ch_conv_out.append(signal.convolve(temp, self.weights[ii, iii], mode='same', method='direct'))
                 temp2 = np.stack(ch_conv_out, axis=0)
+                # temp3 = np.stack(ch_conv_out_grad, axis=0)
 
                 # after stacking the output of the convolution of each channel,
                 # we should sum it over channels to get a 2d one-channel image
                 temp2 = temp2.sum(axis=0)
+                # temp3 = temp3.sum(axis=0)
 
-                #each kernel has its own bias
+                # element-wise addition of bias for every kernel, each kernel has its own bias.
                 result[i,ii]= temp2 + self.bias
+                # self.gradient_weights[i,ii]= temp3 + self.bias
 
-        # self.gradient_weights = np.matmul(self.input_tensor.T, error_tensor)
 
         return result
 
 
-    # def initialize(self, weights_initializer, bias_initializer):
-    #     self.weights = weights_initializer.initialize((self.output_size, self.input_size), self.input_size, self.output_size)
-    #     self.bias = bias_initializer.initialize((1, self.output_size), 1, self.output_size)
-    #     # self.weights = np.vstack((self.weights, self.bias))
+    def initialize(self, weights_initializer, bias_initializer):
+        if len(self.convolution_shape) == 3:
+            self.weights = weights_initializer.initialize((self.convolution_shape[1], self.convolution_shape[2]),
+                                                          self.convolution_shape[0]*self.convolution_shape[1]* self.convolution_shape[2],
+                                                          self.num_kernels*self.convolution_shape[1]* self.convolution_shape[2])
+            self.bias = bias_initializer.initialize((1, self.num_kernels), 1, self.num_kernels)
+
+        elif len(self.convolution_shape) == 2:
+            self.weights = weights_initializer.initialize((1, self.convolution_shape[1]),
+                                                          self.convolution_shape[0]*self.convolution_shape[1],
+                                                          self.num_kernels*self.convolution_shape[1])
+            self.bias = bias_initializer.initialize((1, self.num_kernels), 1, self.num_kernels)
+
 
 
     '''Properties'''
