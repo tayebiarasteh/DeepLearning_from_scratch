@@ -11,7 +11,6 @@ class Pooling:
 
 
     def forward(self, input_tensor):
-        # pdb.set_trace()
         self.input_tensor = input_tensor
 
         # we need these offsets because in the test it's not considering the last column or row if we have an odd number of them!!
@@ -38,14 +37,16 @@ class Pooling:
 
                 #(normal without stride) maxpooling for each channel
                 temp = np.zeros((input_tensor.shape[2], input_tensor.shape[3]))
+
                 # for storing the locations of the maxima
                 temp2 = np.zeros((input_tensor.shape[2], input_tensor.shape[3]))
 
                 for iii in range(temp.shape[0]):
                     for iiii in range(temp.shape[1]):
                         temp[iii, iiii] = np.max(input_tensor[i,ii][iii:iii + self.pooling_shape[0], iiii:iiii + self.pooling_shape[1]])
-                        temp2[iii, iiii] = np.argmax(input_tensor[i,ii][iii:iii + self.pooling_shape[0], iiii:iiii + self.pooling_shape[1]])
 
+                        # storing the locations of maximas
+                        temp2[iii, iiii] = np.argmax(input_tensor[i,ii][iii:iii + self.pooling_shape[0], iiii:iiii + self.pooling_shape[1]])
                         if iii == temp.shape[0]-1 and iiii != temp.shape[1]-1:
                             temp2[iii, iiii] += (temp.shape[0]-1) * temp.shape[1]
                         elif iiii == temp.shape[1]-1 and iii != temp.shape[0]-1:
@@ -59,7 +60,6 @@ class Pooling:
                                 temp2[iii, iiii] += temp.shape[1] -2
                             temp2[iii, iiii] += iiii + temp.shape[1]*iii
 
-                # pdb.set_trace()
                 # stride implementation
                 temp = temp[::self.stride_shape[0], ::self.stride_shape[1]]
                 temp2 = temp2[::self.stride_shape[0], ::self.stride_shape[1]]
@@ -75,7 +75,11 @@ class Pooling:
                 result[i, ii] = temp
                 backward_result[i, ii] = temp2
         self.backward_result = backward_result.astype(int)
-        # pdb.set_trace()
+
+        # layout preservation
+        if self.stride_shape == (1,1):
+            return input_tensor
+
         return result
 
 
@@ -92,8 +96,12 @@ class Pooling:
                 for iii, item1 in enumerate(self.backward_result[i,ii]):
                     for iiii, item2 in enumerate(item1):
 
-                        # gives the coordinate indices
+                        # gives the coordinate-like indices
                         temp1, temp2 = np.unravel_index(item2, self.input_tensor[0, 0].shape)
+
+                        # backward maxpooling
                         result[i,ii, temp1, temp2] = error_tensor[i,ii,iii,iiii]
+                        # if self.stride_shape < self.pooling_shape:
+                        #     np.sum(result[i,ii], axis=0)
         # pdb.set_trace()
         return result
