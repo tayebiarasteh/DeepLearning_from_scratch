@@ -1,5 +1,4 @@
 import numpy as np
-import pdb
 
 
 class Pooling:
@@ -25,55 +24,58 @@ class Pooling:
                            int(np.ceil(input_tensor.shape[2] / self.stride_shape[0] - offset_x)),
                            int(np.ceil(input_tensor.shape[3] / self.stride_shape[1] - offset_y))))
 
-        # to use it in the backward
+        # locations of the maxima, to use it in the backward
         backward_result = np.zeros((input_tensor.shape[0], input_tensor.shape[1],
                            int(np.ceil(input_tensor.shape[2] / self.stride_shape[0] - offset_x)),
                            int(np.ceil(input_tensor.shape[3] / self.stride_shape[1] - offset_y))))
 
         # loop over batches
-        for i in range(input_tensor.shape[0]):
+        for batch in range(input_tensor.shape[0]):
             # loop over each channel of the input
-            for ii in range(input_tensor.shape[1]):
+            for ch in range(input_tensor.shape[1]):
 
                 #(normal without stride) maxpooling for each channel
-                temp = np.zeros((input_tensor.shape[2], input_tensor.shape[3]))
+                pool_plane = np.zeros((input_tensor.shape[2], input_tensor.shape[3]))
 
                 # for storing the locations of the maxima
-                temp2 = np.zeros((input_tensor.shape[2], input_tensor.shape[3]))
+                loc_plane = np.zeros((input_tensor.shape[2], input_tensor.shape[3]))
 
-                for iii in range(temp.shape[0]):
-                    for iiii in range(temp.shape[1]):
-                        temp[iii, iiii] = np.max(input_tensor[i,ii][iii:iii + self.pooling_shape[0], iiii:iiii + self.pooling_shape[1]])
+                for i in range(pool_plane.shape[0]):
+                    for ii in range(pool_plane.shape[1]):
+                        #maxpooling
+                        pool_plane[i, ii] = np.max(input_tensor[batch, ch][i:i + self.pooling_shape[0], ii:ii + self.pooling_shape[1]])
 
                         # storing the locations of maximas
-                        temp2[iii, iiii] = np.argmax(input_tensor[i,ii][iii:iii + self.pooling_shape[0], iiii:iiii + self.pooling_shape[1]])
-                        if iii == temp.shape[0]-1 and iiii != temp.shape[1]-1:
-                            temp2[iii, iiii] += (temp.shape[0]-1) * temp.shape[1]
-                        elif iiii == temp.shape[1]-1 and iii != temp.shape[0]-1:
-                            if temp2[iii, iiii] == 1.0:
-                                temp2[iii, iiii] += temp.shape[1]
-                            temp2[iii, iiii] += iii * temp.shape[1]
-                        elif iii == temp.shape[0]-1 and iiii == temp.shape[1]-1:
-                            temp2[iii, iiii] = temp.shape[0] * temp.shape[1] -1
+                        loc_plane[i, ii] = np.argmax(input_tensor[batch, ch][i:i + self.pooling_shape[0], ii:ii + self.pooling_shape[1]])
+
+                        # fine tuning the locations to be general in the image dimension of the input
+                        if i == pool_plane.shape[0]-1 and ii != pool_plane.shape[1]-1:
+                            loc_plane[i, ii] += (pool_plane.shape[0]-1) * pool_plane.shape[1]
+                        elif ii == pool_plane.shape[1]-1 and i != pool_plane.shape[0]-1:
+                            if loc_plane[i, ii] == 1.0:
+                                loc_plane[i, ii] += pool_plane.shape[1]
+                            loc_plane[i, ii] += i * pool_plane.shape[1]
+                        elif i == pool_plane.shape[0]-1 and ii == pool_plane.shape[1]-1:
+                            loc_plane[i, ii] = pool_plane.shape[0] * pool_plane.shape[1] -1
                         else:
-                            if temp2[iii, iiii]>1.0:
-                                temp2[iii, iiii] += temp.shape[1] -2
-                            temp2[iii, iiii] += iiii + temp.shape[1]*iii
+                            if loc_plane[i, ii]>1.0:
+                                loc_plane[i, ii] += pool_plane.shape[1] -2
+                            loc_plane[i, ii] += ii + pool_plane.shape[1]*i
 
                 # stride implementation
-                temp = temp[::self.stride_shape[0], ::self.stride_shape[1]]
-                temp2 = temp2[::self.stride_shape[0], ::self.stride_shape[1]]
+                pool_plane = pool_plane[::self.stride_shape[0], ::self.stride_shape[1]]
+                loc_plane = loc_plane[::self.stride_shape[0], ::self.stride_shape[1]]
 
                 # removing the last column or row as mentioned above
                 if offset_y==1:
-                    temp = temp[:,:-1]
-                    temp2 = temp2[:,:-1]
+                    pool_plane = pool_plane[:,:-1]
+                    loc_plane = loc_plane[:,:-1]
                 if offset_x==1:
-                    temp = temp[:-1,:]
-                    temp2 = temp2[:-1,:]
+                    pool_plane = pool_plane[:-1,:]
+                    loc_plane = loc_plane[:-1,:]
 
-                result[i, ii] = temp
-                backward_result[i, ii] = temp2
+                result[batch, ch] = pool_plane
+                backward_result[batch, ch] = loc_plane
         self.backward_result = backward_result.astype(int)
 
         # layout preservation
@@ -85,23 +87,25 @@ class Pooling:
 
     def backward(self, error_tensor):
         '''returns the error tensor for the next layer.'''
-        # pdb.set_trace()
         result = np.zeros_like(self.input_tensor)
 
         # loop over batches
-        for i in range(self.input_tensor.shape[0]):
+        for batch in range(self.input_tensor.shape[0]):
             # loop over each channel of the input
-            for ii in range(self.input_tensor.shape[1]):
-                # pdb.set_trace()
-                for iii, item1 in enumerate(self.backward_result[i,ii]):
-                    for iiii, item2 in enumerate(item1):
+            for ch in range(self.input_tensor.shape[1]):
+
+                # nested-loop over locations of the maxima
+                for i, location_vec in enumerate(self.backward_result[batch, ch]):
+                    for ii, location in enumerate(location_vec):
 
                         # gives the coordinate-like indices
-                        temp1, temp2 = np.unravel_index(item2, self.input_tensor[0, 0].shape)
+                        coord_x, coord_y = np.unravel_index(location, self.input_tensor[0, 0].shape)
 
-                        # backward maxpooling
-                        result[i,ii, temp1, temp2] = error_tensor[i,ii,iii,iiii]
-                        # if self.stride_shape < self.pooling_shape:
-                        #     np.sum(result[i,ii], axis=0)
-        # pdb.set_trace()
+                        '''backward maxpooling'''
+                        # if self.stride_shape < self.pooling_shape
+                        # then we may have some duplicates. So we sum up the values which refer to the same location.
+                        if result[batch, ch, coord_x, coord_y] != 0.0:
+                            result[batch, ch, coord_x, coord_y] += error_tensor[batch, ch, i, ii]
+                        else:
+                            result[batch, ch, coord_x, coord_y] = error_tensor[ batch, ch, i, ii]
         return result

@@ -21,6 +21,11 @@ class SgdWithMomentum:
         self.v_k = 0
 
     def calculate_update(self, weight_tensor, gradient_tensor):
+        '''
+        :param weight_tensor: previous weight tensor
+        :param gradient_tensor: dL/dW
+        :return: the updated weights according to the basic gradient descent update scheme
+        '''
         self.v_k = self.momentum_rate*self.v_k - self.learning_rate*gradient_tensor
         return weight_tensor + self.v_k
 
@@ -38,6 +43,11 @@ class Adam:
         self.k = 1
 
     def calculate_update(self, weight_tensor, gradient_tensor):
+        '''
+        :param weight_tensor: previous weight tensor
+        :param gradient_tensor: dL/dW
+        :return: the updated weights according to the basic gradient descent update scheme
+        '''
         self.v_k = self.mu * self.v_k + (1 - self.mu) * gradient_tensor
         self.r_k = self.rho * self.r_k + (1 - self.rho) * gradient_tensor*gradient_tensor
         self.v_hat = self.v_k / (1 - self.mu**self.k)
