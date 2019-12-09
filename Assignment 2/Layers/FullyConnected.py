@@ -1,3 +1,7 @@
+'''
+@author: Soroosh Tayebi Arasteh <soroosh.arasteh@fau.de>
+'''
+
 import numpy as np
 from Optimization import *
 

@@ -576,7 +576,6 @@ class TestConv(unittest.TestCase):
         layers.append(FullyConnected.FullyConnected(35, self.categories))
         layers.append(L2Loss())
         difference = Helpers.gradient_check(layers, input_tensor, self.label_tensor)
-
         self.assertLessEqual(np.sum(difference), 1e-4)
 
     def test_update(self):

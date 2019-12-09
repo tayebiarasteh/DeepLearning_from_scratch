@@ -1,3 +1,8 @@
+'''
+@author: Soroosh Tayebi Arasteh <soroosh.arasteh@fau.de>
+'''
+
+
 import numpy as np
 from Layers import *
 from Optimization import *
@@ -50,7 +55,7 @@ class NeuralNetwork:
     def train(self, iterations):
         for i in range(iterations):
             loss = self.forward()
-            if (i+1)%50 == 0:
+            if (i+1)%200 == 0:
                 print("training iteration",  str(i+1) + ":", 'loss =', loss)
             self.backward()
 
