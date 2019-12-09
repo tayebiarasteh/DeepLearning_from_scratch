@@ -119,31 +119,31 @@ class Conv:
 
                 # padded_input[batch, out_ch] = np.pad(self.input_tensor[batch, out_ch],(self.convolution_shape[1]//2, self.convolution_shape[2]//2), mode='constant')
 
-        elif len(self.convolution_shape)==2:
-            # gradient of sth has always the same shape as it.
-            temp_gradient_weights = np.zeros((error_tensor.shape[0], self.weights.shape[0], self.weights.shape[1],
-                                              self.weights.shape[2]))
-
-            # padded_input = np.zeros((self.input_tensor.shape[0], self.input_tensor.shape[1], self.input_tensor.shape[2] +
-            #      2 * (self.convolution_shape[1] // 2)))
-
-            conv_plane_out = []
-            # padding for the width and height
-            for batch in range(self.input_tensor.shape[0]):
-                ch_conv_out = []
-
-                # loop over different kernels (output channels)
-                for out_ch in range(self.input_tensor.shape[1]):
-                    # padded_input[batch, out_ch] = np.pad(np.copy(self.input_tensor[batch, out_ch]),
-                    #                              (self.convolution_shape[1]//2), mode='constant')
-                    ch_conv_out.append(np.pad(self.input_tensor[batch, out_ch],  self.convolution_shape[1] // 2, mode='constant'))
-                    if self.convolution_shape[1]%2 ==0:
-                        ch_conv_out[out_ch] = ch_conv_out[out_ch][:-1]
-                    # pdb.set_trace()
-                conv_plane = np.stack(ch_conv_out, axis=0)
-                conv_plane.tolist()
-                conv_plane_out.append(conv_plane)
-            padded_input = np.stack(conv_plane_out, axis=0)
+        # elif len(self.convolution_shape)==2:
+        #     # gradient of sth has always the same shape as it.
+        #     temp_gradient_weights = np.zeros((error_tensor.shape[0], self.weights.shape[0], self.weights.shape[1],
+        #                                       self.weights.shape[2]))
+        #
+        #     # padded_input = np.zeros((self.input_tensor.shape[0], self.input_tensor.shape[1], self.input_tensor.shape[2] +
+        #     #      2 * (self.convolution_shape[1] // 2)))
+        #
+        #     conv_plane_out = []
+        #     # padding for the width and height
+        #     for batch in range(self.input_tensor.shape[0]):
+        #         ch_conv_out = []
+        #
+        #         # loop over different kernels (output channels)
+        #         for out_ch in range(self.input_tensor.shape[1]):
+        #             # padded_input[batch, out_ch] = np.pad(np.copy(self.input_tensor[batch, out_ch]),
+        #             #                              (self.convolution_shape[1]//2), mode='constant')
+        #             ch_conv_out.append(np.pad(self.input_tensor[batch, out_ch],  self.convolution_shape[1] // 2, mode='constant'))
+        #             if self.convolution_shape[1]%2 ==0:
+        #                 ch_conv_out[out_ch] = ch_conv_out[out_ch][:-1]
+        #             # pdb.set_trace()
+        #         conv_plane = np.stack(ch_conv_out, axis=0)
+        #         conv_plane.tolist()
+        #         conv_plane_out.append(conv_plane)
+        #     padded_input = np.stack(conv_plane_out, axis=0)
 
 
         if len(self.convolution_shape)==3:
@@ -155,7 +155,13 @@ class Conv:
                     # loop over input channels
                     for in_ch in range(self.input_tensor.shape[1]):
                         # pdb.set_trace()
-                        temp_gradient_weights[batch, out_ch, in_ch] = signal.correlate(padded_input[batch, in_ch], error_tensor[batch, out_ch], mode='valid')
+                        temp = signal.resample(error_tensor[batch, out_ch], error_tensor[batch, out_ch].shape[0] * self.stride_shape[0], axis=0)
+                        temp = signal.resample(temp, error_tensor[batch, out_ch].shape[1] * self.stride_shape[1], axis=1)
+                        # slice it to match the correct shape if the last step of up-sampling was not full
+                        temp = temp[:self.input_tensor.shape[2], :self.input_tensor.shape[3]]
+
+                        temp_gradient_weights[batch, out_ch, in_ch] = signal.correlate(padded_input[batch, in_ch], temp, mode='valid')
+            # pdb.set_trace()
             self.gradient_weights = temp_gradient_weights.sum(axis=0)
 
 
@@ -218,16 +224,18 @@ class Conv:
 
     def initialize(self, weights_initializer, bias_initializer):
         if len(self.convolution_shape) == 3:
-            self.weights = weights_initializer.initialize((self.convolution_shape[1], self.convolution_shape[2]),
+            self.weights = weights_initializer.initialize((self.num_kernels, self.convolution_shape[0], self.convolution_shape[1], self.convolution_shape[2]),
                                                           self.convolution_shape[0]*self.convolution_shape[1]* self.convolution_shape[2],
                                                           self.num_kernels*self.convolution_shape[1]* self.convolution_shape[2])
-            self.bias = bias_initializer.initialize((1, self.num_kernels), 1, self.num_kernels)
+            self.bias = bias_initializer.initialize((self.num_kernels), 1, self.num_kernels)
+            self.bias = self.bias[-1]
 
         elif len(self.convolution_shape) == 2:
-            self.weights = weights_initializer.initialize((1, self.convolution_shape[1]),
+            self.weights = weights_initializer.initialize((self.num_kernels, self.convolution_shape[0], self.convolution_shape[1]),
                                                           self.convolution_shape[0]*self.convolution_shape[1],
                                                           self.num_kernels*self.convolution_shape[1])
             self.bias = bias_initializer.initialize((1, self.num_kernels), 1, self.num_kernels)
+            self.bias = self.bias[-1]
 
 
 
@@ -261,7 +269,17 @@ class Conv:
     @optimizer.setter
     def optimizer(self, value):
         self._optimizer = value
-        self._bias_optimizer = value
     @optimizer.deleter
     def optimizer(self):
         del self._optimizer
+
+
+    @property
+    def bias_optimizer(self):
+        return self._bias_optimizer
+    @bias_optimizer.setter
+    def bias_optimizer(self, value):
+        self._bias_optimizer = value
+    @bias_optimizer.deleter
+    def bias_optimizer(self):
+        del self._bias_optimizer
