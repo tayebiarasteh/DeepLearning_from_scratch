@@ -49,7 +49,7 @@ class FullyConnected:
 
 
     def initialize(self, weights_initializer, bias_initializer):
-        self.weights = weights_initializer.initialize((self.output_size, self.input_size), self.input_size, self.output_size)
+        self.weights = weights_initializer.initialize((self.input_size, self.output_size), self.input_size, self.output_size)
         self.bias = bias_initializer.initialize((1, self.output_size), 1, self.output_size)
         self.weights = np.vstack((self.weights, self.bias))
 

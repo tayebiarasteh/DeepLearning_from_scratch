@@ -110,7 +110,6 @@ class Conv:
                         ch_conv_out[out_ch] = ch_conv_out[out_ch][:,:-1]
                     if self.convolution_shape[1]%2 ==0:
                         ch_conv_out[out_ch] = ch_conv_out[out_ch][:-1,:]
-                    # ch_conv_out[out_ch] = ch_conv_out[out_ch][::self.stride_shape[0], ::self.stride_shape[1]]
                 # pdb.set_trace()
                 conv_plane = np.stack(ch_conv_out, axis=0)
                 conv_plane.tolist()
@@ -155,6 +154,7 @@ class Conv:
                     # loop over input channels
                     for in_ch in range(self.input_tensor.shape[1]):
                         # pdb.set_trace()
+                        # Stride implementation
                         temp = signal.resample(error_tensor[batch, out_ch], error_tensor[batch, out_ch].shape[0] * self.stride_shape[0], axis=0)
                         temp = signal.resample(temp, error_tensor[batch, out_ch].shape[1] * self.stride_shape[1], axis=1)
                         # slice it to match the correct shape if the last step of up-sampling was not full
