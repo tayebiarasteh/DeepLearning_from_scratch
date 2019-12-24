@@ -54,3 +54,27 @@
 /Assignment 2/plots/TestNeuralNetwork_Momentum.pdf
 /Assignment 2/Layers/__pycache__/Pooling.cpython-37.pyc
 /Assignment 2/plots/TestConvNet_on_digit_data.pdf
+/.idea/inspectionProfiles/Project_Default.xml
+/Assignment 3/.idea/.gitignore
+/Assignment 3/.idea/Assignment 3.iml
+/Assignment 3/.idea/inspectionProfiles/profiles_settings.xml
+/Assignment 3/.idea/misc.xml
+/Assignment 3/.idea/modules.xml
+/Assignment 3/.idea/vcs.xml
+/Assignment 3/Layers/__pycache__/Base.cpython-37.pyc
+/Assignment 3/Layers/__pycache__/Conv.cpython-37.pyc
+/Assignment 3/Layers/__pycache__/Dropout.cpython-37.pyc
+/Assignment 3/Layers/__pycache__/Flatten.cpython-37.pyc
+/Assignment 3/Layers/__pycache__/FullyConnected.cpython-37.pyc
+/Assignment 3/Layers/__pycache__/Helpers.cpython-37.pyc
+/Assignment 3/Layers/__pycache__/Initializers.cpython-37.pyc
+/Assignment 3/Layers/__pycache__/Pooling.cpython-37.pyc
+/Assignment 3/Layers/__pycache__/ReLU.cpython-37.pyc
+/Assignment 3/Layers/__pycache__/SoftMax.cpython-37.pyc
+/Assignment 3/Layers/__pycache__/__init__.cpython-37.pyc
+/Assignment 3/Optimization/__pycache__/Constraints.cpython-37.pyc
+/Assignment 3/Optimization/__pycache__/Loss.cpython-37.pyc
+/Assignment 3/Optimization/__pycache__/Optimizers.cpython-37.pyc
+/Assignment 3/Optimization/__pycache__/__init__.cpython-37.pyc
+/Assignment 3/__pycache__/NeuralNetwork.cpython-37.pyc
+/Assignment 3/log.txt

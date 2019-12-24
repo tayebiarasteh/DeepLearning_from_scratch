@@ -4,9 +4,10 @@
 
 
 import numpy as np
+from Layers.Base import *
 
 
-class Constant:
+class Constant(base_layer):
     '''
     self.shape = (output_size, input_size)
     '''
@@ -14,6 +15,8 @@ class Constant:
         '''
         :param weight_initialization: the constant value used for weight initialization.
         '''
+        super().__init__()
+
         self.weight_initialization = weight_initialization
 
     def initialize(self, weights_shape, fan_in, fan_out):
@@ -24,8 +27,10 @@ class Constant:
 
 
 
-class UniformRandom:
+class UniformRandom(base_layer):
     def __init__(self):
+        super().__init__()
+
         pass
 
     def initialize(self, weights_shape, fan_in, fan_out):
@@ -36,8 +41,10 @@ class UniformRandom:
 
 
 
-class Xavier:
+class Xavier(base_layer):
     def __init__(self):
+        super().__init__()
+
         pass
 
     def initialize(self, weights_shape, fan_in, fan_out):
@@ -48,8 +55,10 @@ class Xavier:
 
 
 
-class He:
+class He(base_layer):
     def __init__(self):
+        super().__init__()
+
         pass
 
     def initialize(self, weights_shape, fan_in, fan_out):

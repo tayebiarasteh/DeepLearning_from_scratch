@@ -8,6 +8,7 @@ import NeuralNetwork
 import matplotlib.pyplot as plt
 import os
 import datetime
+import pdb
 
 RNN_TEST = False
 
@@ -844,7 +845,7 @@ class TestConstraints(unittest.TestCase):
         weights_tensor = np.ones(self.shape)
         weights_tensor[1:3, 2:4] *= -1
 
-        optimizer = Optimizers.SgdWithMomentum(2)
+        optimizer = Optimizers.SgdWithMomentum(2, .9)
         regularizer = Constraints.L1_Regularizer(2)
         optimizer.add_regularizer(regularizer)
 
@@ -857,7 +858,7 @@ class TestConstraints(unittest.TestCase):
         weights_tensor = np.ones(self.shape)
         weights_tensor[1:3, 2:4] *= -1
 
-        optimizer = Optimizers.SgdWithMomentum(2)
+        optimizer = Optimizers.SgdWithMomentum(2, .9)
         regularizer = Constraints.L2_Regularizer(2)
         optimizer.add_regularizer(regularizer)
 
@@ -870,7 +871,7 @@ class TestConstraints(unittest.TestCase):
         weights_tensor = np.ones(self.shape)
         weights_tensor[1:3, 2:4] *= -1
 
-        optimizer = Optimizers.Adam(2)
+        optimizer = Optimizers.Adam(2, .9, .999)
         regularizer = Constraints.L1_Regularizer(2)
         optimizer.add_regularizer(regularizer)
 
@@ -883,7 +884,7 @@ class TestConstraints(unittest.TestCase):
         weights_tensor = np.ones(self.shape)
         weights_tensor[1:3, 2:4] *= -1
 
-        optimizer = Optimizers.Adam(2)
+        optimizer = Optimizers.Adam(2, .9, .999)
         regularizer = Constraints.L2_Regularizer(2)
         optimizer.add_regularizer(regularizer)
 

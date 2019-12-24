@@ -4,10 +4,13 @@
 
 
 import numpy as np
+from Layers.Base import *
 
 
-class Pooling:
+class Pooling(base_layer):
     def __init__(self, stride_shape=np.random.uniform(0,1,1)[0], pooling_shape=np.random.uniform(0,1,1)[0]):
+        super().__init__()
+
         self.stride_shape = stride_shape
         self.pooling_shape = pooling_shape
         self.backward_result = 0

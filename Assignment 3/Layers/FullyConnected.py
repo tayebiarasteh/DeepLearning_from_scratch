@@ -4,13 +4,17 @@
 
 import numpy as np
 from Optimization import *
+from Layers.Base import *
 
-class FullyConnected:
+
+class FullyConnected(base_layer):
 
     def __init__(self, input_size = np.random.uniform(0,1,1), output_size = np.random.uniform(0,1,1)):
         '''
         :param output_size: a parameter of the layer specifying the row dimensionality of the output.
         '''
+        super().__init__()
+
         self.input_size = input_size
         self.output_size = output_size
 

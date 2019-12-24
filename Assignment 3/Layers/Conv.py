@@ -5,9 +5,10 @@
 
 import numpy as np
 from scipy import signal
+from Layers.Base import *
 
 
-class Conv:
+class Conv(base_layer):
     def __init__(self, stride_shape=np.random.uniform(0,1,1)[0],
                  convolution_shape=np.random.uniform(0,1,2), num_kernels=np.random.uniform(0,1,1)[0]):
         '''
@@ -18,6 +19,7 @@ class Conv:
             where c represents the number of input channels, and m, n represent the spacial extent of the filter kernel.
         :param num_kernels: an integer value
         '''
+        super().__init__()
         self.stride_shape = stride_shape
         self.convolution_shape = convolution_shape
         self.num_kernels = num_kernels

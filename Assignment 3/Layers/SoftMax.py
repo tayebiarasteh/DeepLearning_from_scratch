@@ -4,11 +4,14 @@
 
 
 import numpy as np
+from Layers.Base import *
 
 
-class SoftMax:
+class SoftMax(base_layer):
 
     def __init__(self):
+        super().__init__()
+
         pass
 
 

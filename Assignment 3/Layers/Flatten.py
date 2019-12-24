@@ -4,10 +4,12 @@
 
 
 import numpy as np
+from Layers.Base import *
 
 
-class Flatten:
+class Flatten(base_layer):
     def __init__(self):
+        super().__init__()
         pass
 
 

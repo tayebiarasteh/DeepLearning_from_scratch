@@ -29,6 +29,7 @@ class NeuralNetwork:
         self.loss_layer = []
         self.weights_initializer = weights_initializer
         self.bias_initializer = bias_initializer
+        self._phase = None
 
 
     def forward(self):
@@ -36,6 +37,9 @@ class NeuralNetwork:
         for layer in self.layers:
             self.input_tensor = layer.forward(self.input_tensor)
         loss = self.loss_layer.forward(self.input_tensor, self.label_tensor)
+        #TODO
+        if self.regulizer:
+            loss += self.regulizer.norm()
         self.loss.append(loss)
         return loss
 
@@ -70,3 +74,10 @@ class NeuralNetwork:
         return input_tensor
 
 
+
+    @property
+    def phase(self):
+        return self._phase
+    @phase.setter
+    def phase(self, value):
+        self._phase = value
