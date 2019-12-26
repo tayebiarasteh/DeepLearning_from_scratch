@@ -1,4 +1,4 @@
 # __all__ = ["Helpers", "FullyConnected", "SoftMax", "ReLU", "Flatten", "TanH", "Sigmoid", "RNN", "LSTM",
 #            "Conv", "Pooling", "Initializers", "Dropout", "BatchNormalization", "Base"]
-__all__ = ["Helpers", "FullyConnected", "SoftMax", "ReLU", "Flatten",
+__all__ = ["Helpers", "FullyConnected", "SoftMax", "ReLU", "Flatten", "TanH", "Sigmoid", "LSTM",
            "Conv", "Pooling", "Initializers", "Dropout", "Base", "BatchNormalization"]

@@ -18,6 +18,8 @@ class BatchNormalization(base_layer):
         self.weights = np.ones((channels)) # gamma
         self._gradient_bias = None
         self._gradient_weights = None
+        self._optimizer = None #weight optimizer
+        self._bias_optimizer = None
 
         # Moving averages
         self.BN_MOVING_MEANS = dict()
@@ -97,19 +99,23 @@ class BatchNormalization(base_layer):
             self.gradient_weights = np.sum(error_tensor * self.X_hat, axis=(0,2,3))
             self.gradient_bias = np.sum(error_tensor, axis=(0,2,3))
 
+        '''Update with optimizers'''
+        if self._optimizer:
+            self.weights = self._optimizer.calculate_update(self.weights, self._gradient_weights)
+        if self._bias_optimizer:
+            self.bias = self._bias_optimizer.calculate_update(self.bias, self._gradient_bias)
 
 
         if len(error_tensor.shape) == 2:
             out = compute_bn_gradients(error_tensor, self.input_tensor, self.weights, self.mean, self.variance, 1e-15)
             self.gradient_weights = np.sum(error_tensor * self.X_hat, axis=0)
             self.gradient_bias = np.sum(error_tensor, axis=0)
-            # error_tensor = self.reformat(error_tensor)
-            # out = compute_bn_gradients(self.reformat(error_tensor), self.reformat(self.input_tensor),
-            #                            self.weights, self.mean, self.variance, 1e-15)
-            # out = self.reformat(out)
-            # self.gradient_weights = np.sum(error_tensor * self.X_hat, axis=(0,2,3))
-            # self.gradient_bias = np.sum(error_tensor, axis=(0,2,3))
 
+            '''Update with optimizers'''
+            if self._optimizer:
+                self.weights = self._optimizer.calculate_update(self.weights, self._gradient_weights)
+            if self._bias_optimizer:
+                self.bias = self._bias_optimizer.calculate_update(self.bias, self._gradient_bias)
 
         return out
 
@@ -135,7 +141,6 @@ class BatchNormalization(base_layer):
                 B, H, M, N = self.input_shape
             except:
                 B, H, M, N = self.input_tensor.shape
-
             out = tensor.reshape((B, M * N, H))
             out = np.transpose(out, (0, 2, 1))
             out = out.reshape((B, H, M, N))
@@ -165,3 +170,24 @@ class BatchNormalization(base_layer):
     @gradient_bias.deleter
     def gradient_bias(self):
         del self._gradient_bias
+
+    @property
+    def optimizer(self):
+        return self._optimizer
+    @optimizer.setter
+    def optimizer(self, value):
+        self._optimizer = value
+    @optimizer.deleter
+    def optimizer(self):
+        del self._optimizer
+
+
+    @property
+    def bias_optimizer(self):
+        return self._bias_optimizer
+    @bias_optimizer.setter
+    def bias_optimizer(self, value):
+        self._bias_optimizer = value
+    @bias_optimizer.deleter
+    def bias_optimizer(self):
+        del self._bias_optimizer

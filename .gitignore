@@ -79,3 +79,5 @@
 /Assignment 3/__pycache__/NeuralNetwork.cpython-37.pyc
 /Assignment 3/log.txt
 /Assignment 3/Layers/__pycache__/BatchNormalization.cpython-37.pyc
+/Assignment 3/Layers/__pycache__/Sigmoid.cpython-37.pyc
+/Assignment 3/Layers/__pycache__/TanH.cpython-37.pyc
