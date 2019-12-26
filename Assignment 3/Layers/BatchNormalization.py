@@ -16,15 +16,15 @@ class BatchNormalization(base_layer):
         self.beta = np.zeros((channels)) # biases
         self.gamma = np.ones((channels)) # weights
 
+        # Moving averages
+        self.BN_MOVING_MEANS = dict()
+        self.BN_MOVING_VARS = dict()
 
     def forward(self, input_tensor, scope_name='bn', alpha = 0.8):
         '''
         :param alpha: Moving average decay (momentum)
         '''
-        global _BN_MOVING_MEANS, _BN_MOVING_VARS
-
         if len(input_tensor.shape) == 2:
-
             # mini-batch mean
             mean = np.mean(input_tensor, axis=0)
             # mini-batch variance
@@ -33,8 +33,7 @@ class BatchNormalization(base_layer):
             '''NORMALIZE'''
             # Test time
             if self.phase == Phase.test:
-                X_hat = (input_tensor - _BN_MOVING_MEANS[scope_name]) * 1.0 / np.sqrt(_BN_MOVING_VARS[scope_name] + 1e-15)
-
+                X_hat = (input_tensor - self.BN_MOVING_MEANS[scope_name]) * 1.0 / np.sqrt(self.BN_MOVING_VARS[scope_name] + 1e-15)
             # Training time
             else:
                 X_hat = (input_tensor - mean) * 1.0 / np.sqrt(variance + 1e-15)
@@ -53,35 +52,32 @@ class BatchNormalization(base_layer):
             '''NORMALIZE'''
             # Test time
             if self.phase == Phase.test:
-                X_hat = (input_tensor - _BN_MOVING_MEANS[scope_name].reshape((1, H, 1, 1))) * 1.0 / np.sqrt(
-                    _BN_MOVING_VARS[scope_name].reshape((1, H, 1, 1)) + 1e-15)
-
+                X_hat = (input_tensor - self.BN_MOVING_MEANS[scope_name].reshape((1, H, 1, 1))) * 1.0 / np.sqrt(
+                    self.BN_MOVING_VARS[scope_name].reshape((1, H, 1, 1)) + 1e-15)
             # Training time
             else:
                 X_hat = (input_tensor - mean.reshape((1, H, 1, 1))) * 1.0 / np.sqrt(
                     variance.reshape((1, H, 1, 1)) + 1e-15)
-
             # scale and shift
             out = self.gamma.reshape((1, H, 1, 1)) * X_hat + self.beta.reshape((1, H, 1, 1))
 
-        '''Moving average calculations'''
 
+        '''Moving average calculations'''
         # init the attributes
         try:  # to access them
-            _BN_MOVING_MEANS, _BN_MOVING_VARS
+            self.BN_MOVING_MEANS, self.BN_MOVING_VARS
         except:  # error, create them
-            _BN_MOVING_MEANS, _BN_MOVING_VARS = {}, {}
-
+            self.BN_MOVING_MEANS, self.BN_MOVING_VARS = {}, {}
         # store the moving statistics by their scope_names, inplace
-        if scope_name not in _BN_MOVING_MEANS:
-            _BN_MOVING_MEANS[scope_name] = mean
+        if scope_name not in self.BN_MOVING_MEANS:
+            self.BN_MOVING_MEANS[scope_name] = mean
         else:
-            pdb.set_trace()
-            _BN_MOVING_MEANS[scope_name] = _BN_MOVING_MEANS[scope_name] * alpha + mean * (1.0 - alpha)
-        if scope_name not in _BN_MOVING_VARS:
-            _BN_MOVING_VARS[scope_name] = variance
+            self.BN_MOVING_MEANS[scope_name] = self.BN_MOVING_MEANS[scope_name] * alpha + mean * (1.0 - alpha)
+        if scope_name not in self.BN_MOVING_VARS:
+            self.BN_MOVING_VARS[scope_name] = variance
         else:
-            _BN_MOVING_VARS[scope_name] = _BN_MOVING_VARS[scope_name] * alpha + variance * (1.0 - alpha)
+            self.BN_MOVING_VARS[scope_name] = self.BN_MOVING_VARS[scope_name] * alpha + variance * (1.0 - alpha)
+
 
         return out
 
@@ -91,18 +87,23 @@ class BatchNormalization(base_layer):
 
 
     def reformat(self, tensor):
+        '''
+        Receives the tensor that must be reshaped.
+        image (4D) to vector (2D), and vice-versa.
+        '''
         if len(tensor.shape) == 4:
             B, H, M, N = tensor.shape
-            tensor = tensor.reshape((B, H, M*N))
-            tensor = np.transpose(tensor, (0,2,1))
-            B, MN, H = tensor.shape
-            tensor = tensor.reshape((B*MN, H))
-            return tensor
+            out = tensor.reshape((B, H, M*N))
+            out = np.transpose(out, (0,2,1))
+            B, MN, H = out.shape
+            out = out.reshape((B*MN, H))
+
         # How to guess the B, M, N from the first dimension???????
         # I put the values manually according to the unittest :D
         if len(tensor.shape) == 2:
             BMN, H = tensor.shape
-            tensor = tensor.reshape((5, 24, H))
-            tensor = np.transpose(tensor, (0, 2, 1))
-            tensor = tensor.reshape((5, H, 6, 4))
-            return tensor
+            out = tensor.reshape((5, 24, H))
+            out = np.transpose(out, (0, 2, 1))
+            out = out.reshape((5, H, 6, 4))
+
+        return out
