@@ -16,6 +16,9 @@ class Flatten(base_layer):
     def forward(self, input_tensor):
         '''reshapes and returns the input tensor.'''
 
+        if len(input_tensor.shape) ==2:
+            return input_tensor.flatten()
+
         #saves the input tensor dimensions
         self.input_tensor_dim = (input_tensor.shape[0], input_tensor.shape[1], input_tensor.shape[2], input_tensor.shape[3])
         result = np.zeros((input_tensor.shape[0], input_tensor.shape[1]*input_tensor.shape[2]*input_tensor.shape[3]))

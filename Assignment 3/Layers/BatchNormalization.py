@@ -3,6 +3,7 @@
 '''
 
 from Layers.Base import *
+from Layers.Helpers import compute_bn_gradients
 import pdb
 
 
@@ -13,8 +14,10 @@ class BatchNormalization(base_layer):
         input tensor in both, the vector and the image-case.
         '''
         self.channels = channels
-        self.beta = np.zeros((channels)) # biases
-        self.gamma = np.ones((channels)) # weights
+        self.bias = np.zeros((channels)) # beta
+        self.weights = np.ones((channels)) # gamma
+        self._gradient_bias = None
+        self._gradient_weights = None
 
         # Moving averages
         self.BN_MOVING_MEANS = dict()
@@ -24,6 +27,7 @@ class BatchNormalization(base_layer):
         '''
         :param alpha: Moving average decay (momentum)
         '''
+        self.input_tensor = input_tensor
         if len(input_tensor.shape) == 2:
             # mini-batch mean
             mean = np.mean(input_tensor, axis=0)
@@ -38,7 +42,7 @@ class BatchNormalization(base_layer):
             else:
                 X_hat = (input_tensor - mean) * 1.0 / np.sqrt(variance + 1e-15)
             # scale and shift
-            out = self.gamma * X_hat + self.beta
+            out = self.weights * X_hat + self.bias
 
 
         elif len(input_tensor.shape) == 4:
@@ -59,7 +63,7 @@ class BatchNormalization(base_layer):
                 X_hat = (input_tensor - mean.reshape((1, H, 1, 1))) * 1.0 / np.sqrt(
                     variance.reshape((1, H, 1, 1)) + 1e-15)
             # scale and shift
-            out = self.gamma.reshape((1, H, 1, 1)) * X_hat + self.beta.reshape((1, H, 1, 1))
+            out = self.weights.reshape((1, H, 1, 1)) * X_hat + self.bias.reshape((1, H, 1, 1))
 
 
         '''Moving average calculations'''
@@ -78,12 +82,36 @@ class BatchNormalization(base_layer):
         else:
             self.BN_MOVING_VARS[scope_name] = self.BN_MOVING_VARS[scope_name] * alpha + variance * (1.0 - alpha)
 
+        self.mean = mean
+        self.variance = variance
+        self.X_hat = X_hat
 
         return out
 
 
     def backward(self, error_tensor):
-        pass
+        if len(error_tensor.shape) == 4:
+            out = compute_bn_gradients(self.reformat(error_tensor), self.reformat(self.input_tensor),
+                                       self.weights, self.mean, self.variance, 1e-15)
+            out = self.reformat(out)
+            self.gradient_weights = np.sum(error_tensor * self.X_hat, axis=(0,2,3))
+            self.gradient_bias = np.sum(error_tensor, axis=(0,2,3))
+
+
+
+        if len(error_tensor.shape) == 2:
+            out = compute_bn_gradients(error_tensor, self.input_tensor, self.weights, self.mean, self.variance, 1e-15)
+            self.gradient_weights = np.sum(error_tensor * self.X_hat, axis=0)
+            self.gradient_bias = np.sum(error_tensor, axis=0)
+            # error_tensor = self.reformat(error_tensor)
+            # out = compute_bn_gradients(self.reformat(error_tensor), self.reformat(self.input_tensor),
+            #                            self.weights, self.mean, self.variance, 1e-15)
+            # out = self.reformat(out)
+            # self.gradient_weights = np.sum(error_tensor * self.X_hat, axis=(0,2,3))
+            # self.gradient_bias = np.sum(error_tensor, axis=(0,2,3))
+
+
+        return out
 
 
     def reformat(self, tensor):
@@ -91,6 +119,7 @@ class BatchNormalization(base_layer):
         Receives the tensor that must be reshaped.
         image (4D) to vector (2D), and vice-versa.
         '''
+        out = np.zeros_like(tensor)
         if len(tensor.shape) == 4:
             B, H, M, N = tensor.shape
             out = tensor.reshape((B, H, M*N))
@@ -101,9 +130,38 @@ class BatchNormalization(base_layer):
         # How to guess the B, M, N from the first dimension???????
         # I put the values manually according to the unittest :D
         if len(tensor.shape) == 2:
-            BMN, H = tensor.shape
-            out = tensor.reshape((5, 24, H))
+            # pdb.set_trace()
+            try:
+                B, H, M, N = self.input_shape
+            except:
+                B, H, M, N = self.input_tensor.shape
+
+            out = tensor.reshape((B, M * N, H))
             out = np.transpose(out, (0, 2, 1))
-            out = out.reshape((5, H, 6, 4))
+            out = out.reshape((B, H, M, N))
 
         return out
+
+
+    '''Properties'''
+
+    @property
+    def gradient_weights(self):
+        return self._gradient_weights
+    @gradient_weights.setter
+    def gradient_weights(self, value):
+        self._gradient_weights = value
+    @gradient_weights.deleter
+    def gradient_weights(self):
+        del self._gradient_weights
+
+
+    @property
+    def gradient_bias(self):
+        return self._gradient_bias
+    @gradient_bias.setter
+    def gradient_bias(self, value):
+        self._gradient_bias = value
+    @gradient_bias.deleter
+    def gradient_bias(self):
+        del self._gradient_bias
