@@ -38,8 +38,8 @@ class NeuralNetwork:
             self.input_tensor = layer.forward(self.input_tensor)
         loss = self.loss_layer.forward(self.input_tensor, self.label_tensor)
         #TODO
-        if self.regulizer:
-            loss += self.regulizer.norm()
+        # if self.regulizer:
+        #     loss += self.regulizer.norm()
         self.loss.append(loss)
         return loss
 

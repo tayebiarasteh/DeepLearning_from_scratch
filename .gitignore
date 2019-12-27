@@ -81,3 +81,13 @@
 /Assignment 3/Layers/__pycache__/BatchNormalization.cpython-37.pyc
 /Assignment 3/Layers/__pycache__/Sigmoid.cpython-37.pyc
 /Assignment 3/Layers/__pycache__/TanH.cpython-37.pyc
+/Assignment 3/.idea/dictionaries/soroosh.xml
+/Assignment 3/Layers/__pycache__/LSTM.cpython-37.pyc
+/Assignment 3/plots/TestConvNet_ADAM.pdf
+/Assignment 3/plots/TestConvNet_Dropout.pdf
+/Assignment 3/plots/TestConvNet_L1_regularizer.pdf
+/Assignment 3/plots/TestConvNet_L2_regularizer.pdf
+/Assignment 3/plots/TestNeuralNetwork.pdf
+/Assignment 3/plots/TestNeuralNetwork_ADAM.pdf
+/Assignment 3/plots/TestNeuralNetwork_Dropout.pdf
+/Assignment 3/plots/TestNeuralNetwork_Momentum.pdf
