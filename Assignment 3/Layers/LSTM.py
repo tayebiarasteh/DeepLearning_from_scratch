@@ -18,8 +18,8 @@ class LSTM(base_layer):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.output_size = output_size
-        self.hidden_state = np.zeros((hidden_size))
-        self.cell_state = np.zeros((hidden_size))
+        self.hidden_state = None
+        self.cell_state = None
 
         # Sets the boolean state representing whether the RNN
         # regards subsequent sequences as a belonging to the same long sequence.
@@ -28,6 +28,7 @@ class LSTM(base_layer):
         self._optimizer = None #weight optimizer
         self._bias_optimizer = None
         self._gradient_weights = None
+        self._weights = None
 
         # The weights are defined as the weights which are involved in calculating the
         # hidden state as a stacked tensor. E.g. if the hidden state is computed with
@@ -36,18 +37,24 @@ class LSTM(base_layer):
         # are the weights considered to be weights for the whole class.
         # self._weights = None
 
-        pdb.set_trace()
         self.sigmoid = Sigmoid.Sigmoid()
         self.tanh = TanH.TanH()
-        self.fully_middle = FullyConnected.FullyConnected(input_size=input_size + hidden_size, output_size=hidden_size)
+        self.fully_middle = FullyConnected.FullyConnected(input_size=input_size + hidden_size ,
+                                                          output_size=hidden_size)
         self.fully_out = FullyConnected.FullyConnected(input_size=hidden_size, output_size=output_size)
 
     def forward(self, input_tensor):
         # pdb.set_trace()
 
+        output_tensor = np.zeros((input_tensor.shape[0], self.output_size))
+
+        if self._memorize == False:
+            self.hidden_state = np.zeros((self.hidden_size))
+            self.cell_state = np.zeros((self.hidden_size))
+
         # giving inputs sequentially
-        for batch in input_tensor:
-            # Concatenation of input and previous hidden state
+        for idx, batch in enumerate(input_tensor):
+        # Concatenation of input and previous hidden state
             X_tilda = np.concatenate((self.hidden_state, batch))
 
             # Calculate forget gate
@@ -62,7 +69,6 @@ class LSTM(base_layer):
             C_tilda = self.fully_middle.forward(X_tilda)
             C_tilda = self.tanh.forward(C_tilda)
 
-            pdb.set_trace()
             # Calculate memory state
             self.cell_state = f * self.cell_state + i * C_tilda
 
@@ -77,7 +83,9 @@ class LSTM(base_layer):
             y = self.fully_out.forward(self.hidden_state)
             y = self.sigmoid.forward(y)
 
-            return y
+            output_tensor[idx] = y
+
+        return output_tensor
 
 
 
@@ -87,8 +95,11 @@ class LSTM(base_layer):
 
 
     def initialize(self, weights_initializer, bias_initializer):
-        pass
-
+        # output size of each fullyconnected is 4x hidden size
+        self.weights = weights_initializer.initialize((self.input_size + self.hidden_size, 4 * self.hidden_size),
+                                                      self.input_size + self.hidden_size, 4 * self.hidden_size)
+        self.bias = bias_initializer.initialize((1, 4 * self.hidden_size), 1, 4 * self.hidden_size)
+        self.weights = np.vstack((self.weights, self.bias))
 
 
     '''Properties'''

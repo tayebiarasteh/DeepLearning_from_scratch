@@ -5,6 +5,7 @@
 import numpy as np
 from Optimization import *
 from Layers.Base import *
+import pdb
 
 
 class FullyConnected(base_layer):
@@ -33,6 +34,9 @@ class FullyConnected(base_layer):
             and rows of size batch_size representing the number of inputs processed simultaneously.
         :return: the input_tensor for the next layer.
         '''
+        if input_tensor.ndim == 1:
+            input_tensor = np.concatenate((input_tensor, np.ones((1))))  # X'
+            return np.matmul(input_tensor, self.weights)
         self.batch_size = input_tensor.shape[0]
         # adding an extra row of ones according to the slide 24 of "Neural Networks"
         input_tensor = np.concatenate((input_tensor, np.ones([self.batch_size, 1])), axis=1) # X'
