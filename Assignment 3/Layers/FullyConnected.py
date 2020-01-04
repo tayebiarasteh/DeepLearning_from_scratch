@@ -36,7 +36,9 @@ class FullyConnected(base_layer):
         '''
         if input_tensor.ndim == 1:
             input_tensor = np.concatenate((input_tensor, np.ones((1))))  # X'
+            self.input_tensor = input_tensor
             return np.matmul(input_tensor, self.weights)
+
         self.batch_size = input_tensor.shape[0]
         # adding an extra row of ones according to the slide 24 of "Neural Networks"
         input_tensor = np.concatenate((input_tensor, np.ones([self.batch_size, 1])), axis=1) # X'
@@ -50,6 +52,9 @@ class FullyConnected(base_layer):
         :return: the error tensor for the next layer.
         '''
         gradient_input = np.matmul(error_tensor, self.weights.T)
+        if error_tensor.ndim == 1:
+            return gradient_input[:-1]
+
         self.gradient_weights = np.matmul(self.input_tensor.T, error_tensor)
 
         # updating the weights

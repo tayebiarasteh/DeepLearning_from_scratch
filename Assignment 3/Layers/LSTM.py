@@ -18,8 +18,8 @@ class LSTM(base_layer):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.output_size = output_size
-        self.hidden_state = None
-        self.cell_state = None
+        self.hidden_state = np.zeros((self.hidden_size))
+        self.cell_state = np.zeros((self.hidden_size))
 
         # Sets the boolean state representing whether the RNN
         # regards subsequent sequences as a belonging to the same long sequence.
@@ -37,15 +37,18 @@ class LSTM(base_layer):
         # are the weights considered to be weights for the whole class.
         # self._weights = None
 
-        self.sigmoid = Sigmoid.Sigmoid()
-        self.tanh = TanH.TanH()
+        self.sigmoid1 = Sigmoid.Sigmoid()
+        self.sigmoid2 = Sigmoid.Sigmoid()
+        self.sigmoid3 = Sigmoid.Sigmoid()
+        self.sigmoid4 = Sigmoid.Sigmoid()
+        self.tanh1 = TanH.TanH()
+        self.tanh2 = TanH.TanH()
         self.fully_middle = FullyConnected.FullyConnected(input_size=input_size + hidden_size ,
                                                           output_size=hidden_size)
         self.fully_out = FullyConnected.FullyConnected(input_size=hidden_size, output_size=output_size)
 
-    def forward(self, input_tensor):
-        # pdb.set_trace()
 
+    def forward(self, input_tensor):
         output_tensor = np.zeros((input_tensor.shape[0], self.output_size))
 
         if self._memorize == False:
@@ -59,29 +62,29 @@ class LSTM(base_layer):
 
             # Calculate forget gate
             f = self.fully_middle.forward(X_tilda)
-            f = self.sigmoid.forward(f)
+            f = self.sigmoid1.forward(f)
 
             # Calculate input gate
             i = self.fully_middle.forward(X_tilda)
-            i = self.sigmoid.forward(i)
+            i = self.sigmoid2.forward(i)
 
             # Calculate candidate
             C_tilda = self.fully_middle.forward(X_tilda)
-            C_tilda = self.tanh.forward(C_tilda)
+            C_tilda = self.tanh1.forward(C_tilda)
 
             # Calculate memory state
             self.cell_state = f * self.cell_state + i * C_tilda
 
             # Calculate output gate
             o = self.fully_middle.forward(X_tilda)
-            o = self.sigmoid.forward(o)
+            o = self.sigmoid3.forward(o)
 
             # Calculate hidden state
-            self.hidden_state = o * self.tanh.forward(self.cell_state)
+            self.hidden_state = o * self.tanh2.forward(self.cell_state)
 
             # Calculate logits
             y = self.fully_out.forward(self.hidden_state)
-            y = self.sigmoid.forward(y)
+            y = self.sigmoid4.forward(y)
 
             output_tensor[idx] = y
 
@@ -90,8 +93,52 @@ class LSTM(base_layer):
 
 
     def backward(self, error_tensor):
-        pass
+        output_tensor = np.zeros((error_tensor.shape[0], self.input_size))
 
+        # if self._memorize == False:
+        #     self.hidden_state = np.zeros((self.hidden_size))
+        #     self.cell_state = np.zeros((self.hidden_size))
+
+        # giving inputs sequentially
+        for idx, batch in enumerate(reversed(error_tensor)):
+            # Calculate hidden state
+            y = self.sigmoid4.backward(batch)
+            self.hidden_state = self.fully_out.backward(y)
+
+            # Calculate output gate
+            o = self.hidden_state / self.tanh2.forward(self.cell_state)
+
+            # Calculate hidden state
+            self.cell_state = self.tanh2.backward(self.hidden_state / o)
+
+            # backward output gate
+            o = self.sigmoid3.backward(o)
+            X_tilda = self.fully_middle.backward(o)
+
+            # forward forget gate
+            f = self.fully_middle.forward(X_tilda)
+            f = self.sigmoid1.forward(f)
+
+            # forward input gate
+            i = self.fully_middle.forward(X_tilda)
+            i = self.sigmoid2.forward(i)
+
+            # forward candidate
+            C_tilda = self.fully_middle.forward(X_tilda)
+            C_tilda = self.tanh1.forward(C_tilda)
+
+            # previous memory state
+            self.cell_state = (self.cell_state - i * C_tilda) / f
+
+            # de-concatenation of input and previous hidden state
+            y = X_tilda[len(self.hidden_state):]
+
+            # previous hidden state
+            self.hidden_state = X_tilda[:len(self.hidden_state)]
+
+            output_tensor[idx] = y
+
+        return output_tensor
 
 
     def initialize(self, weights_initializer, bias_initializer):
@@ -100,6 +147,7 @@ class LSTM(base_layer):
                                                       self.input_size + self.hidden_size, 4 * self.hidden_size)
         self.bias = bias_initializer.initialize((1, 4 * self.hidden_size), 1, 4 * self.hidden_size)
         self.weights = np.vstack((self.weights, self.bias))
+
 
 
     '''Properties'''
