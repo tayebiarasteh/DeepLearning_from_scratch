@@ -45,7 +45,7 @@ class BatchNormalization(base_layer):
                 X_hat = (input_tensor - mean) * 1.0 / np.sqrt(variance + 1e-15)
             # scale and shift
             out = self.weights * X_hat + self.bias
-
+            # pdb.set_trace()
 
         elif len(input_tensor.shape) == 4:
             # extract the dimensions
@@ -146,6 +146,13 @@ class BatchNormalization(base_layer):
             out = out.reshape((B, H, M, N))
 
         return out
+
+
+    def initialize(self, weights_initializer, bias_initializer):
+        self.bias = np.zeros((self.channels)) # beta
+        self.weights = np.ones((self.channels)) # gamma
+
+
 
 
     '''Properties'''
