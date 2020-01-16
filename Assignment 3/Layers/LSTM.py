@@ -25,8 +25,7 @@ class LSTM(base_layer):
         # regards subsequent sequences as a belonging to the same long sequence.
         self._memorize = False
 
-        self._optimizer = None #weight optimizer
-        self._bias_optimizer = None
+        self._optimizer = None
         self._gradient_weights = None
         self._weights = None
 
@@ -44,7 +43,7 @@ class LSTM(base_layer):
         self.tanh1 = TanH.TanH()
         self.tanh2 = TanH.TanH()
         self.fully_middle = FullyConnected.FullyConnected(input_size=input_size + hidden_size ,
-                                                          output_size=hidden_size)
+                                                          output_size=4 * hidden_size)
         self.fully_out = FullyConnected.FullyConnected(input_size=hidden_size, output_size=output_size)
 
 
@@ -60,27 +59,32 @@ class LSTM(base_layer):
         # Concatenation of input and previous hidden state
             X_tilda = np.concatenate((self.hidden_state, batch))
 
+            # first fully connected layer
+            fully_out = self.fully_middle.forward(X_tilda)
+
+
+            # deconcatenating to 4 vectors
+
             # Calculate forget gate
-            f = self.fully_middle.forward(X_tilda)
-            f = self.sigmoid1.forward(f)
+            self.f = self.sigmoid1.forward(fully_out[:fully_out.shape[0]//4])
 
             # Calculate input gate
-            i = self.fully_middle.forward(X_tilda)
-            i = self.sigmoid2.forward(i)
+            self.i = self.sigmoid2.forward(fully_out[fully_out.shape[0]//4:fully_out.shape[0]//2])
 
             # Calculate candidate
-            C_tilda = self.fully_middle.forward(X_tilda)
-            C_tilda = self.tanh1.forward(C_tilda)
+            self.C_tilda = self.tanh1.forward(fully_out[fully_out.shape[0]//2: 3*fully_out.shape[0]//4])
 
             # Calculate memory state
-            self.cell_state = f * self.cell_state + i * C_tilda
+            self.cell_state = self.f * self.cell_state + self.i * self.C_tilda
 
             # Calculate output gate
-            o = self.fully_middle.forward(X_tilda)
-            o = self.sigmoid3.forward(o)
+            self.o = self.sigmoid3.forward(fully_out[3*fully_out.shape[0]//4:])
+
+            # tanh2 output
+            self.tanh2_out = self.tanh2.forward(self.cell_state)
 
             # Calculate hidden state
-            self.hidden_state = o * self.tanh2.forward(self.cell_state)
+            self.hidden_state = self.o * self.tanh2_out
 
             # Calculate logits
             y = self.fully_out.forward(self.hidden_state)
@@ -93,52 +97,68 @@ class LSTM(base_layer):
 
 
     def backward(self, error_tensor):
-        output_tensor = np.zeros((error_tensor.shape[0], self.input_size))
+        gradient_input = np.zeros((error_tensor.shape[0], self.input_size))
 
-        # if self._memorize == False:
-        #     self.hidden_state = np.zeros((self.hidden_size))
-        #     self.cell_state = np.zeros((self.hidden_size))
+        # initializing the hidden and cell state gradients
+        gradient_hidden = np.zeros((self.hidden_size))
+        gradient_cell = np.zeros((self.hidden_size))
 
         # giving inputs sequentially
         for idx, batch in enumerate(reversed(error_tensor)):
-            # Calculate hidden state
+
+            # assign the optimizer of the LSTM to the optimizer of the fully connected
+            self.fully_out.optimizer = self.optimizer
+            self.fully_middle.optimizer = self.optimizer
+
+            # gradient of output w.r.t input
             y = self.sigmoid4.backward(batch)
-            self.hidden_state = self.fully_out.backward(y)
+            gradient_out_wrt_in = self.fully_out.backward(y)
+            # assign the weights of the fully connected to the weights of the LSTM
+            self.weights = self.fully_out.weights
+            self.gradient_weights = self.fully_out.gradient_weights
 
-            # Calculate output gate
-            o = self.hidden_state / self.tanh2.forward(self.cell_state)
+            # gradient summing
+            out_hidden = gradient_hidden + gradient_out_wrt_in
 
-            # Calculate hidden state
-            self.cell_state = self.tanh2.backward(self.hidden_state / o)
+            # gradient output gate
+            o_gradient = out_hidden * self.tanh2_out
+            o_gradient = self.sigmoid3.backward(o_gradient)
 
-            # backward output gate
-            o = self.sigmoid3.backward(o)
-            X_tilda = self.fully_middle.backward(o)
+            # gradient tanh2
+            gradient_out_wrt_in_cell = out_hidden * self.o
+            gradient_out_wrt_in_cell = self.tanh2.backward(gradient_out_wrt_in_cell)
 
-            # forward forget gate
-            f = self.fully_middle.forward(X_tilda)
-            f = self.sigmoid1.forward(f)
+            # gradient summing
+            out_cell = gradient_out_wrt_in_cell + gradient_cell
 
-            # forward input gate
-            i = self.fully_middle.forward(X_tilda)
-            i = self.sigmoid2.forward(i)
+            '''gradient of the summation'''
+            # gradient candidate
+            C_tilda_gradient = out_cell * self.i
+            C_tilda_gradient = self.tanh1.backward(C_tilda_gradient)
 
-            # forward candidate
-            C_tilda = self.fully_middle.forward(X_tilda)
-            C_tilda = self.tanh1.forward(C_tilda)
+            # gradient input gate
+            i_gradient = out_cell * self.C_tilda
+            i_gradient = self.sigmoid2.backward(i_gradient)
 
-            # previous memory state
-            self.cell_state = (self.cell_state - i * C_tilda) / f
+            # gradient cell
+            gradient_cell = out_cell * self.f
 
-            # de-concatenation of input and previous hidden state
-            y = X_tilda[len(self.hidden_state):]
+            # gradient forget gate
+            f_gradient = out_cell * self.cell_state
+            f_gradient = self.sigmoid1.backward(f_gradient)
 
-            # previous hidden state
-            self.hidden_state = X_tilda[:len(self.hidden_state)]
+            # concatenation for the fully connected
+            y = self.fully_middle.backward(np.concatenate((f_gradient, i_gradient, C_tilda_gradient, o_gradient)))
+            # assign the weights of the fully connected to the weights of the LSTM
+            self.weights = self.fully_middle.weights
+            self.gradient_weights = self.fully_middle.gradient_weights
 
-            output_tensor[idx] = y
+            gradient_hidden = y[:self.hidden_size]
+            y = y[self.hidden_size:]
 
-        return output_tensor
+            gradient_input[idx] = y
+
+        return gradient_input
 
 
     def initialize(self, weights_initializer, bias_initializer):
@@ -188,13 +208,3 @@ class LSTM(base_layer):
     @optimizer.deleter
     def optimizer(self):
         del self._optimizer
-
-    @property
-    def bias_optimizer(self):
-        return self._bias_optimizer
-    @bias_optimizer.setter
-    def bias_optimizer(self, value):
-        self._bias_optimizer = value
-    @bias_optimizer.deleter
-    def bias_optimizer(self):
-        del self._bias_optimizer

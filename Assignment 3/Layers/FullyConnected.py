@@ -52,14 +52,19 @@ class FullyConnected(base_layer):
         :return: the error tensor for the next layer.
         '''
         gradient_input = np.matmul(error_tensor, self.weights.T)
-        if error_tensor.ndim == 1:
-            return gradient_input[:-1]
 
-        self.gradient_weights = np.matmul(self.input_tensor.T, error_tensor)
+        if self.input_tensor.ndim == 1:
+            in_tensor = np.expand_dims(self.input_tensor, axis=0)
+            self.gradient_weights = np.matmul(in_tensor.T, np.expand_dims(error_tensor, axis=0))
+        else:
+            self.gradient_weights = np.matmul(self.input_tensor.T, error_tensor)
 
         # updating the weights
         if self._optimizer:
             self.weights = self._optimizer.calculate_update(self.weights, self._gradient_weights)
+
+        if error_tensor.ndim == 1:
+            return gradient_input[:-1]
 
         #removing the bias column from the input.
         return gradient_input[:,:-1]
