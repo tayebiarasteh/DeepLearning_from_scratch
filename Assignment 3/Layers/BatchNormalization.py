@@ -99,11 +99,11 @@ class BatchNormalization(base_layer):
             self.gradient_weights = np.sum(error_tensor * self.X_hat, axis=(0,2,3))
             self.gradient_bias = np.sum(error_tensor, axis=(0,2,3))
 
-        '''Update with optimizers'''
-        if self._optimizer:
-            self.weights = self._optimizer.calculate_update(self.weights, self._gradient_weights)
-        if self._bias_optimizer:
-            self.bias = self._bias_optimizer.calculate_update(self.bias, self._gradient_bias)
+            '''Update with optimizers'''
+            if self._optimizer:
+                self.weights = self._optimizer.calculate_update(self.weights, self._gradient_weights)
+            if self._bias_optimizer:
+                self.bias = self._bias_optimizer.calculate_update(self.bias, self._gradient_bias)
 
 
         if len(error_tensor.shape) == 2:
