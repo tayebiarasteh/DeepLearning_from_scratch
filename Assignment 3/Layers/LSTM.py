@@ -62,9 +62,7 @@ class LSTM(base_layer):
             # first fully connected layer
             fully_out = self.fully_middle.forward(X_tilda)
 
-
-            # deconcatenating to 4 vectors
-
+            '''deconcatenating to 4 vectors'''
             # Calculate forget gate
             self.f = self.sigmoid1.forward(fully_out[:fully_out.shape[0]//4])
 
@@ -103,6 +101,9 @@ class LSTM(base_layer):
         gradient_hidden = np.zeros((self.hidden_size))
         gradient_cell = np.zeros((self.hidden_size))
 
+        weights_temp = 0
+        gradient_weights_temp = 0
+
         # giving inputs sequentially
         for idx, batch in enumerate(reversed(error_tensor)):
 
@@ -114,8 +115,8 @@ class LSTM(base_layer):
             y = self.sigmoid4.backward(batch)
             gradient_out_wrt_in = self.fully_out.backward(y)
             # assign the weights of the fully connected to the weights of the LSTM
-            self.weights = self.fully_out.weights
-            self.gradient_weights = self.fully_out.gradient_weights
+            # weights_temp += self.fully_out.weights
+            # gradient_weights_temp += self.fully_out.gradient_weights
 
             # gradient summing
             out_hidden = gradient_hidden + gradient_out_wrt_in
@@ -139,7 +140,7 @@ class LSTM(base_layer):
             # gradient input gate
             i_gradient = out_cell * self.C_tilda
             i_gradient = self.sigmoid2.backward(i_gradient)
-
+            # pdb.set_trace()
             # gradient cell
             gradient_cell = out_cell * self.f
 
@@ -149,25 +150,29 @@ class LSTM(base_layer):
 
             # concatenation for the fully connected
             y = self.fully_middle.backward(np.concatenate((f_gradient, i_gradient, C_tilda_gradient, o_gradient)))
+
             # assign the weights of the fully connected to the weights of the LSTM
-            self.weights = self.fully_middle.weights
-            self.gradient_weights = self.fully_middle.gradient_weights
+            weights_temp += self.fully_middle.weights
+            gradient_weights_temp += self.fully_middle.gradient_weights
 
             gradient_hidden = y[:self.hidden_size]
             y = y[self.hidden_size:]
 
             gradient_input[idx] = y
 
+        self.weights = weights_temp
+        self.gradient_weights = gradient_weights_temp
+
         return gradient_input
 
 
     def initialize(self, weights_initializer, bias_initializer):
-        # output size of each fullyconnected is 4x hidden size
-        self.weights = weights_initializer.initialize((self.input_size + self.hidden_size, 4 * self.hidden_size),
-                                                      self.input_size + self.hidden_size, 4 * self.hidden_size)
-        self.bias = bias_initializer.initialize((1, 4 * self.hidden_size), 1, 4 * self.hidden_size)
-        self.weights = np.vstack((self.weights, self.bias))
+        self.fully_middle.initialize(weights_initializer, bias_initializer)
+        self.fully_out.initialize(weights_initializer, bias_initializer)
 
+
+    def calculate_regularization_loss(self):
+        self.fully_middle.optimizer.regulizer
 
 
     '''Properties'''
@@ -181,23 +186,23 @@ class LSTM(base_layer):
 
     @property
     def gradient_weights(self):
-        return self._gradient_weights
+        return self.fully_middle.gradient_weights
     @gradient_weights.setter
     def gradient_weights(self, value):
-        self._gradient_weights = value
+        self.fully_middle.gradient_weights = value
     @gradient_weights.deleter
     def gradient_weights(self):
-        del self._gradient_weights
+        del self.fully_middle.gradient_weights
 
     @property
     def weights(self):
-        return self._weights
+        return self.fully_middle.weights
     @weights.setter
     def weights(self, value):
-        self._weights = value
+        self.fully_middle.weights = value
     @weights.deleter
     def weights(self):
-        del self._weights
+        del self.fully_middle.weights
 
     @property
     def optimizer(self):

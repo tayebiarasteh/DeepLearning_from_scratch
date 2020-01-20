@@ -34,14 +34,16 @@ class NeuralNetwork:
 
     def forward(self):
         self.input_tensor, self.label_tensor = self.data_layer.forward()
+        r_loss = 0
+
         for layer in self.layers:
             self.input_tensor = layer.forward(self.input_tensor)
+            if self.optimizer.regularizer:
+                r_loss += self.optimizer.regularizer.norm(layer.weights)
+
         loss = self.loss_layer.forward(self.input_tensor, self.label_tensor)
-        #TODO
-        # if self.regulizer:
-        #     loss += self.regulizer.norm()
-        self.loss.append(loss)
-        return loss
+        self.loss.append(loss + r_loss)
+        return loss + r_loss
 
 
     def backward(self):

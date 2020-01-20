@@ -4,7 +4,6 @@
 
 from Layers.Base import *
 from Layers.Helpers import compute_bn_gradients
-import pdb
 
 
 class BatchNormalization(base_layer):

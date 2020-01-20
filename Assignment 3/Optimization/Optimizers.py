@@ -8,10 +8,10 @@ import numpy as np
 
 class base_optimizer:
     def __init__(self):
-        self.regulizer = None
+        self.regularizer = None
 
     def add_regularizer(self, regularizer):
-        self.regulizer = regularizer
+        self.regularizer = regularizer
 
 
 class Sgd(base_optimizer):
@@ -25,8 +25,8 @@ class Sgd(base_optimizer):
         :param gradient_tensor: dL/dW
         :return: the updated weights according to the basic gradient descent update scheme
         '''
-        if self.regulizer:
-            shrinkage = self.regulizer.calculate_gradient(weight_tensor)
+        if self.regularizer:
+            shrinkage = self.regularizer.calculate_gradient(weight_tensor)
             weight_tensor = weight_tensor - self.learning_rate * shrinkage
 
         return weight_tensor - self.learning_rate*gradient_tensor
@@ -47,8 +47,8 @@ class SgdWithMomentum(base_optimizer):
         '''
         self.v_k = self.momentum_rate*self.v_k - self.learning_rate*gradient_tensor
 
-        if self.regulizer:
-            shrinkage = self.regulizer.calculate_gradient(weight_tensor)
+        if self.regularizer:
+            shrinkage = self.regularizer.calculate_gradient(weight_tensor)
             weight_tensor = weight_tensor - self.learning_rate * shrinkage
 
         return weight_tensor + self.v_k
@@ -79,8 +79,8 @@ class Adam(base_optimizer):
         self.r_hat = self.r_k / (1 - self.rho**self.k)
         self.k += 1
 
-        if self.regulizer:
-            shrinkage = self.regulizer.calculate_gradient(weight_tensor)
+        if self.regularizer:
+            shrinkage = self.regularizer.calculate_gradient(weight_tensor)
             weight_tensor = weight_tensor - self.learning_rate * shrinkage
 
         return weight_tensor - self.learning_rate * \
