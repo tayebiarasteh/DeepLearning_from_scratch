@@ -27,14 +27,13 @@ class LSTM(base_layer):
 
         self._optimizer = None
         self._gradient_weights = None
-        self._weights = None
 
         # The weights are defined as the weights which are involved in calculating the
         # hidden state as a stacked tensor. E.g. if the hidden state is computed with
         # a single Fully Connected layer, which receives a stack of the hidden state
         # and the input tensor, the weights of this particular Fully Connected Layer,
         # are the weights considered to be weights for the whole class.
-        # self._weights = None
+        self._weights = None
 
         self.sigmoid1 = Sigmoid.Sigmoid()
         self.sigmoid2 = Sigmoid.Sigmoid()
@@ -108,8 +107,9 @@ class LSTM(base_layer):
         for idx, batch in enumerate(reversed(error_tensor)):
 
             # assign the optimizer of the LSTM to the optimizer of the fully connected
-            self.fully_out.optimizer = self.optimizer
-            self.fully_middle.optimizer = self.optimizer
+            if self._optimizer:
+                self.fully_out.optimizer = self._optimizer
+                self.fully_middle.optimizer = self._optimizer
 
             # gradient of output w.r.t input
             y = self.sigmoid4.backward(batch)
@@ -140,7 +140,7 @@ class LSTM(base_layer):
             # gradient input gate
             i_gradient = out_cell * self.C_tilda
             i_gradient = self.sigmoid2.backward(i_gradient)
-            # pdb.set_trace()
+
             # gradient cell
             gradient_cell = out_cell * self.f
 
@@ -151,7 +151,6 @@ class LSTM(base_layer):
             # concatenation for the fully connected
             y = self.fully_middle.backward(np.concatenate((f_gradient, i_gradient, C_tilda_gradient, o_gradient)))
 
-            # assign the weights of the fully connected to the weights of the LSTM
             weights_temp += self.fully_middle.weights
             gradient_weights_temp += self.fully_middle.gradient_weights
 
@@ -160,8 +159,9 @@ class LSTM(base_layer):
 
             gradient_input[idx] = y
 
-        self.weights = weights_temp
-        self.gradient_weights = gradient_weights_temp
+        # assign the weights of the fully connected to the weights of the LSTM
+        self._weights = weights_temp
+        self._gradient_weights = gradient_weights_temp
 
         return gradient_input
 
@@ -172,7 +172,7 @@ class LSTM(base_layer):
 
 
     def calculate_regularization_loss(self):
-        self.fully_middle.optimizer.regulizer
+        pass
 
 
     '''Properties'''

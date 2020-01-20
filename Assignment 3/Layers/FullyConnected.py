@@ -5,7 +5,6 @@
 import numpy as np
 from Optimization import *
 from Layers.Base import *
-import pdb
 
 
 class FullyConnected(base_layer):
@@ -15,16 +14,12 @@ class FullyConnected(base_layer):
         :param output_size: a parameter of the layer specifying the row dimensionality of the output.
         '''
         super().__init__()
-
         self.input_size = input_size
         self.output_size = output_size
 
         # random initialization of weights (including bias in the weight matrix).
         self.weights = np.random.rand(self.input_size + 1, self.output_size ) # W'
-        # self.weights = self.initialize() # W'
-        # optimizer temporary constructor
         self._optimizer = None
-        # temporary constructor
         self._gradient_weights = np.zeros_like(self.weights)
 
 
@@ -40,10 +35,9 @@ class FullyConnected(base_layer):
             return np.matmul(input_tensor, self.weights)
 
         self.batch_size = input_tensor.shape[0]
-        # adding an extra row of ones according to the slide 24 of "Neural Networks"
+        # adding an extra row of ones as bias
         input_tensor = np.concatenate((input_tensor, np.ones([self.batch_size, 1])), axis=1) # X'
         self.input_tensor = input_tensor
-        # Eq. 6 of "Neural Networks"
         return np.matmul(input_tensor, self.weights)
 
 
