@@ -1473,6 +1473,7 @@ class TestNeuralNetwork(unittest.TestCase):
         fcl_2 = FullyConnected.FullyConnected(categories, categories)
         net.append_trainable_layer(fcl_2)
         net.layers.append(Dropout.Dropout(0.3))
+        net.layers[-1].phase = Base.Phase.test
         net.layers.append(SoftMax.SoftMax())
 
         net.train(2000)

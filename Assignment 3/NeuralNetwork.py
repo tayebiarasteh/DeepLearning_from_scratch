@@ -38,8 +38,10 @@ class NeuralNetwork:
 
         for layer in self.layers:
             self.input_tensor = layer.forward(self.input_tensor)
-            if self.optimizer.regularizer:
-                r_loss += self.optimizer.regularizer.norm(layer.weights)
+            if hasattr(layer, 'optimizer'):
+                if layer.optimizer:
+                    if layer.optimizer.regularizer:
+                        r_loss += layer.optimizer.regularizer.norm(layer.weights)
 
         loss = self.loss_layer.forward(self.input_tensor, self.label_tensor)
         self.loss.append(loss + r_loss)

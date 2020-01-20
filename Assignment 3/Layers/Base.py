@@ -7,6 +7,3 @@ class base_layer:
 class Phase:
     train = 'train'
     test = 'test'
-
-
-

@@ -13,6 +13,7 @@ class Dropout(base_layer):
         '''
         super().__init__()
         self.probability = probability
+        self.binary_mask = 0
 
     def forward(self, input_tensor):
         # in test time, no dropout!
