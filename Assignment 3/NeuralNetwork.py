@@ -29,7 +29,7 @@ class NeuralNetwork:
         self.loss_layer = []
         self.weights_initializer = weights_initializer
         self.bias_initializer = bias_initializer
-        self._phase = None
+        self._phase = Base.Phase.train
 
 
     def forward(self):
@@ -61,6 +61,8 @@ class NeuralNetwork:
 
 
     def train(self, iterations):
+        self.phase = Base.Phase.train
+
         for i in range(iterations):
             loss = self.forward()
             if (i+1)%200 == 0:
@@ -73,7 +75,10 @@ class NeuralNetwork:
         propagates the input tensor through the network
         and returns the prediction of the last layer.
         '''
+        self.phase = Base.Phase.test
+
         for layer in self.layers:
+            layer.phase = Base.Phase.test
             input_tensor = layer.forward(input_tensor)
         return input_tensor
 

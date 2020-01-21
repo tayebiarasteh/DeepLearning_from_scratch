@@ -19,73 +19,76 @@ class BatchNormalization(base_layer):
         self._gradient_weights = None
         self._optimizer = None #weight optimizer
         self._bias_optimizer = None
+        self.mean = 0
+        self.variance = 1
+        self.test_mean = 0
+        self.test_variance = 1
 
-        # Moving averages
-        self.BN_MOVING_MEANS = dict()
-        self.BN_MOVING_VARS = dict()
 
-    def forward(self, input_tensor, scope_name='bn', alpha = 0.8):
+    def forward(self, input_tensor, alpha = 0.8):
         '''
         :param alpha: Moving average decay (momentum)
         '''
+        epsilon = 1e-15
         self.input_tensor = input_tensor
-        if len(input_tensor.shape) == 2:
-            # mini-batch mean
-            mean = np.mean(input_tensor, axis=0)
-            # mini-batch variance
-            variance = np.mean((input_tensor - mean) ** 2, axis=0)
 
-            '''NORMALIZE'''
-            # Test time
+        if len(input_tensor.shape) == 2:
+            self.mean = np.mean(input_tensor, axis=0)
+            self.variance = np.var(input_tensor, axis=0)
+
+            if (self.phase == Phase.train):
+                # mini-batch mean
+                new_mean = np.mean(input_tensor, axis=0)
+                # mini-batch variance
+                new_variance = np.var((input_tensor), axis=0)
+
+                '''Moving average calculations for test time'''
+                self.test_mean = alpha * self.mean + (1 - alpha) * new_mean
+                self.test_variance = alpha * self.variance + (1 - alpha) * new_variance
+
+                self.mean = new_mean
+                self.variance = new_variance
+
+                # NORMALIZE
+                X_hat = (input_tensor - self.mean) / np.sqrt(self.variance + epsilon)
+
+            # NORMALIZE test time
             if self.phase == Phase.test:
-                X_hat = (input_tensor - self.BN_MOVING_MEANS[scope_name]) * 1.0 / np.sqrt(self.BN_MOVING_VARS[scope_name] + 1e-15)
-            # Training time
-            else:
-                X_hat = (input_tensor - mean) * 1.0 / np.sqrt(variance + 1e-15)
-            # scale and shift
+                X_hat = (input_tensor - self.test_mean) / np.sqrt(self.test_variance + epsilon)
+
+            self.X_hat = X_hat
             out = self.weights * X_hat + self.bias
-            # pdb.set_trace()
+
 
         elif len(input_tensor.shape) == 4:
             # extract the dimensions
             B, H, M, N = input_tensor.shape
-            # mini-batch mean
-            mean = np.mean(input_tensor, axis=(0, 2, 3))
-            # mini-batch variance
-            variance = np.mean((input_tensor - mean.reshape((1, H, 1, 1))) ** 2, axis=(0, 2, 3))
+            self.mean = np.mean(input_tensor, axis=(0, 2, 3))
+            self.variance = np.var((input_tensor), axis=(0, 2, 3))
 
-            '''NORMALIZE'''
-            # Test time
+            if (self.phase == Phase.train):
+                # mini-batch mean
+                new_mean = np.mean(input_tensor, axis=(0, 2, 3))
+                # mini-batch variance
+                new_variance = np.var(input_tensor, axis=(0, 2, 3))
+
+                '''Moving average calculations for test time'''
+                self.test_mean = alpha * self.mean.reshape((1, H, 1, 1)) + (1 - alpha) * new_mean.reshape((1, H, 1, 1))
+                self.test_variance = alpha * self.variance.reshape((1, H, 1, 1)) + (1 - alpha) * new_variance.reshape((1, H, 1, 1))
+
+                self.mean = new_mean
+                self.variance = new_variance
+
+                # NORMALIZE
+                X_hat = (input_tensor - self.mean.reshape((1, H, 1, 1))) / np.sqrt(self.variance.reshape((1, H, 1, 1)) + epsilon)
+
+            # NORMALIZE test time
             if self.phase == Phase.test:
-                X_hat = (input_tensor - self.BN_MOVING_MEANS[scope_name].reshape((1, H, 1, 1))) * 1.0 / np.sqrt(
-                    self.BN_MOVING_VARS[scope_name].reshape((1, H, 1, 1)) + 1e-15)
-            # Training time
-            else:
-                X_hat = (input_tensor - mean.reshape((1, H, 1, 1))) * 1.0 / np.sqrt(
-                    variance.reshape((1, H, 1, 1)) + 1e-15)
-            # scale and shift
+                X_hat = (input_tensor - self.test_mean.reshape((1, H, 1, 1))) / np.sqrt(self.test_variance.reshape((1, H, 1, 1)) + epsilon)
+
+            self.X_hat = X_hat
             out = self.weights.reshape((1, H, 1, 1)) * X_hat + self.bias.reshape((1, H, 1, 1))
 
-
-        '''Moving average calculations'''
-        # init the attributes
-        try:  # to access them
-            self.BN_MOVING_MEANS, self.BN_MOVING_VARS
-        except:  # error, create them
-            self.BN_MOVING_MEANS, self.BN_MOVING_VARS = {}, {}
-        # store the moving statistics by their scope_names, inplace
-        if scope_name not in self.BN_MOVING_MEANS:
-            self.BN_MOVING_MEANS[scope_name] = mean
-        else:
-            self.BN_MOVING_MEANS[scope_name] = self.BN_MOVING_MEANS[scope_name] * alpha + mean * (1.0 - alpha)
-        if scope_name not in self.BN_MOVING_VARS:
-            self.BN_MOVING_VARS[scope_name] = variance
-        else:
-            self.BN_MOVING_VARS[scope_name] = self.BN_MOVING_VARS[scope_name] * alpha + variance * (1.0 - alpha)
-
-        self.mean = mean
-        self.variance = variance
-        self.X_hat = X_hat
 
         return out
 
