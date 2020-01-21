@@ -26,7 +26,7 @@ class LSTM(base_layer):
         self._memorize = False
 
         self._optimizer = None
-        self._gradient_weights = None
+        self._gradient_weights = 0
 
         # The weights are defined as the weights which are involved in calculating the
         # hidden state as a stacked tensor. E.g. if the hidden state is computed with
@@ -56,7 +56,7 @@ class LSTM(base_layer):
         # giving inputs sequentially
         for idx, batch in enumerate(input_tensor):
         # Concatenation of input and previous hidden state
-            X_tilda = np.concatenate((self.hidden_state, batch))
+            X_tilda = np.concatenate([self.hidden_state, batch])
 
             # first fully connected layer
             fully_out = self.fully_middle.forward(X_tilda)
@@ -96,12 +96,13 @@ class LSTM(base_layer):
     def backward(self, error_tensor):
         gradient_input = np.zeros((error_tensor.shape[0], self.input_size))
 
+
         # initializing the hidden and cell state gradients
         gradient_hidden = np.zeros((self.hidden_size))
         gradient_cell = np.zeros((self.hidden_size))
 
-        weights_temp = 0
-        gradient_weights_temp = 0
+        # weights_temp = 0
+        # gradient_weights_temp = np.zeros_like(self.fully_middle.gradient_weights)
 
         # giving inputs sequentially
         for idx, batch in enumerate(reversed(error_tensor)):
@@ -115,8 +116,7 @@ class LSTM(base_layer):
             y = self.sigmoid4.backward(batch)
             gradient_out_wrt_in = self.fully_out.backward(y)
             # assign the weights of the fully connected to the weights of the LSTM
-            # weights_temp += self.fully_out.weights
-            # gradient_weights_temp += self.fully_out.gradient_weights
+            # gradient_weights_temp[:self.hidden_size] += self.fully_out.gradient_weights[:-1]
 
             # gradient summing
             out_hidden = gradient_hidden + gradient_out_wrt_in
@@ -149,10 +149,9 @@ class LSTM(base_layer):
             f_gradient = self.sigmoid1.backward(f_gradient)
 
             # concatenation for the fully connected
-            y = self.fully_middle.backward(np.concatenate((f_gradient, i_gradient, C_tilda_gradient, o_gradient)))
+            y = self.fully_middle.backward(np.concatenate([f_gradient, i_gradient, C_tilda_gradient, o_gradient]))
 
-            weights_temp += self.fully_middle.weights
-            gradient_weights_temp += self.fully_middle.gradient_weights
+            # gradient_weights_temp = self.fully_middle.gradient_weights
 
             gradient_hidden = y[:self.hidden_size]
             y = y[self.hidden_size:]
@@ -160,8 +159,7 @@ class LSTM(base_layer):
             gradient_input[idx] = y
 
         # assign the weights of the fully connected to the weights of the LSTM
-        self._weights = weights_temp
-        self._gradient_weights = gradient_weights_temp
+        # self._gradient_weights = gradient_weights_temp
 
         return gradient_input
 
@@ -171,8 +169,14 @@ class LSTM(base_layer):
         self.fully_out.initialize(weights_initializer, bias_initializer)
 
 
-    def calculate_regularization_loss(self):
-        pass
+    def calculate_regularization_loss(self, layer):
+        r_loss = 0
+        if hasattr(layer, 'optimizer'):
+            if layer.optimizer:
+                if layer.optimizer.regularizer:
+                    r_loss += layer.optimizer.regularizer.norm(layer.weights)
+        return r_loss
+
 
 
     '''Properties'''
