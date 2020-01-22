@@ -48,10 +48,20 @@ class LSTM(base_layer):
 
     def forward(self, input_tensor):
         output_tensor = np.zeros((input_tensor.shape[0], self.output_size))
+        self.o = []
+        self.i = []
+        self.f = []
+        self.C_tilda = []
+        self.cell_state_b = []
+        self.hidden_state_b = []
+        self.tanh2_out = []
 
         if self._memorize == False:
             self.hidden_state = np.zeros((self.hidden_size))
             self.cell_state = np.zeros((self.hidden_size))
+
+        self.cell_state_b.append(self.cell_state)
+        self.hidden_state_b.append(self.hidden_state)
 
         # giving inputs sequentially
         for idx, batch in enumerate(input_tensor):
@@ -59,34 +69,40 @@ class LSTM(base_layer):
             X_tilda = np.concatenate([self.hidden_state, batch])
 
             # first fully connected layer
-            fully_out = self.fully_middle.forward(X_tilda)
+            fully_middle_out = self.fully_middle.forward(X_tilda)
 
             '''deconcatenating to 4 vectors'''
             # Calculate forget gate
-            self.f = self.sigmoid1.forward(fully_out[:fully_out.shape[0]//4])
+            f = self.sigmoid1.forward(fully_middle_out[:fully_middle_out.shape[0]//4])
+            self.f.append(f)
 
             # Calculate input gate
-            self.i = self.sigmoid2.forward(fully_out[fully_out.shape[0]//4:fully_out.shape[0]//2])
+            i = self.sigmoid2.forward(fully_middle_out[fully_middle_out.shape[0]//4:fully_middle_out.shape[0]//2])
+            self.i.append(i)
 
             # Calculate candidate
-            self.C_tilda = self.tanh1.forward(fully_out[fully_out.shape[0]//2: 3*fully_out.shape[0]//4])
+            C_tilda = self.tanh1.forward(fully_middle_out[fully_middle_out.shape[0]//2: 3*fully_middle_out.shape[0]//4])
+            self.C_tilda.append(C_tilda)
 
             # Calculate memory state
-            self.cell_state = self.f * self.cell_state + self.i * self.C_tilda
+            self.cell_state = f * self.cell_state + i * C_tilda
+            self.cell_state_b.append(self.cell_state)
 
             # Calculate output gate
-            self.o = self.sigmoid3.forward(fully_out[3*fully_out.shape[0]//4:])
+            o = self.sigmoid3.forward(fully_middle_out[3*fully_middle_out.shape[0]//4:])
+            self.o.append(o)
 
             # tanh2 output
-            self.tanh2_out = self.tanh2.forward(self.cell_state)
+            tanh2_out = self.tanh2.forward(self.cell_state)
+            self.tanh2_out.append(tanh2_out)
 
             # Calculate hidden state
-            self.hidden_state = self.o * self.tanh2_out
+            self.hidden_state = o * tanh2_out
+            self.hidden_state_b.append(self.hidden_state)
 
             # Calculate logits
             y = self.fully_out.forward(self.hidden_state)
             y = self.sigmoid4.forward(y)
-
             output_tensor[idx] = y
 
         return output_tensor
@@ -96,70 +112,57 @@ class LSTM(base_layer):
     def backward(self, error_tensor):
         gradient_input = np.zeros((error_tensor.shape[0], self.input_size))
 
-
         # initializing the hidden and cell state gradients
-        gradient_hidden = np.zeros((self.hidden_size))
-        gradient_cell = np.zeros((self.hidden_size))
+        gradient_hidden = np.zeros((error_tensor.shape[0], self.hidden_size))
+        gradient_cell = np.zeros((error_tensor.shape[0], self.hidden_size))
 
-        # weights_temp = 0
-        # gradient_weights_temp = np.zeros_like(self.fully_middle.gradient_weights)
+        # assign the optimizer of the LSTM to the optimizer of the fully connected
+        if self._optimizer:
+            self.fully_out.optimizer = self._optimizer
+            self.fully_middle.optimizer = self._optimizer
 
         # giving inputs sequentially
-        for idx, batch in enumerate(reversed(error_tensor)):
-
-            # assign the optimizer of the LSTM to the optimizer of the fully connected
-            if self._optimizer:
-                self.fully_out.optimizer = self._optimizer
-                self.fully_middle.optimizer = self._optimizer
+        for idx in reversed(range(len(error_tensor))):
 
             # gradient of output w.r.t input
-            y = self.sigmoid4.backward(batch)
-            gradient_out_wrt_in = self.fully_out.backward(y)
-            # assign the weights of the fully connected to the weights of the LSTM
-            # gradient_weights_temp[:self.hidden_size] += self.fully_out.gradient_weights[:-1]
+            gradient_out_wrt_in = self.sigmoid4.backward(np.copy(error_tensor)[idx])
+            gradient_out_wrt_in = self.fully_out.backward(gradient_out_wrt_in)
 
             # gradient summing
-            out_hidden = gradient_hidden + gradient_out_wrt_in
+            out_hidden = gradient_hidden[idx] + gradient_out_wrt_in
 
             # gradient output gate
-            o_gradient = out_hidden * self.tanh2_out
+            o_gradient = np.copy(out_hidden) * self.tanh2_out[idx]
             o_gradient = self.sigmoid3.backward(o_gradient)
 
             # gradient tanh2
-            gradient_out_wrt_in_cell = out_hidden * self.o
+            gradient_out_wrt_in_cell = np.copy(out_hidden) * self.o[idx]
             gradient_out_wrt_in_cell = self.tanh2.backward(gradient_out_wrt_in_cell)
 
             # gradient summing
-            out_cell = gradient_out_wrt_in_cell + gradient_cell
+            out_cell = gradient_out_wrt_in_cell + gradient_cell[idx]
 
             '''gradient of the summation'''
             # gradient candidate
-            C_tilda_gradient = out_cell * self.i
+            C_tilda_gradient = np.copy(out_cell) * self.i[idx]
             C_tilda_gradient = self.tanh1.backward(C_tilda_gradient)
 
             # gradient input gate
-            i_gradient = out_cell * self.C_tilda
+            i_gradient = np.copy(out_cell) * self.C_tilda[idx]
             i_gradient = self.sigmoid2.backward(i_gradient)
 
             # gradient cell
-            gradient_cell = out_cell * self.f
+            gradient_cell[idx-1] = np.copy(out_cell) * self.f[idx]
 
             # gradient forget gate
-            f_gradient = out_cell * self.cell_state
+            f_gradient = np.copy(out_cell) * self.cell_state_b[idx - 1]
             f_gradient = self.sigmoid1.backward(f_gradient)
 
             # concatenation for the fully connected
             y = self.fully_middle.backward(np.concatenate([f_gradient, i_gradient, C_tilda_gradient, o_gradient]))
 
-            # gradient_weights_temp = self.fully_middle.gradient_weights
-
-            gradient_hidden = y[:self.hidden_size]
-            y = y[self.hidden_size:]
-
-            gradient_input[idx] = y
-
-        # assign the weights of the fully connected to the weights of the LSTM
-        # self._gradient_weights = gradient_weights_temp
+            gradient_hidden[idx-1] = y[:self.hidden_size]
+            gradient_input[idx] = y[self.hidden_size:]
 
         return gradient_input
 
