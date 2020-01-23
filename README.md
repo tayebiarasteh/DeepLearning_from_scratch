@@ -14,11 +14,11 @@ The main goal of the exercises was to develop fundamental blocks of neural netwo
 #### Overview of the project:
 
 
-1. **Part 1 (Feed forward):** We developed a `fully connected layer` object and `ReLU` & `Softmax` activations.
+1. **Part 1 (Feed forward):** A `fully connected layer` object and `ReLU` & `Softmax` activations were developed.
 
 2. **Part 2 (Convolutional layer):** Basic blocks of Convolutional Neural Networks were devloped (`Conv` layer and `Pooling`). Several optimizers such as `SGD with Momentum` and `ADAM` were also developed.
 
-3. **Part 3 (Recurrent layer):** We developed the classical `LSTM` Unit layer (basically the most used RNN archtecture to date), which can be used in Recurrent Neural Networks. Furthermore, more activations (such as `TanH` or `Sigmoid`) and more layers (like `Batch Normalization`) were developed.
+3. **Part 3 (Recurrent layer):** The classical `LSTM` Unit layer (basically the most used RNN architecture to date), which can be used in Recurrent Neural Networks was developed. Furthermore, more activations (such as `TanH` or `Sigmoid`) and more layers (like `Batch Normalization`) were developed.
 
 Further information such as task descriptions and specifications can be found inside `Protocols`.
 
