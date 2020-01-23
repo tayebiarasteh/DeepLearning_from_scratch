@@ -37,6 +37,7 @@ class NeuralNetwork:
         r_loss = 0
 
         for layer in self.layers:
+            layer.phase = Base.Phase.train
             self.input_tensor = layer.forward(self.input_tensor)
             if hasattr(layer, 'optimizer'):
                 if layer.optimizer:

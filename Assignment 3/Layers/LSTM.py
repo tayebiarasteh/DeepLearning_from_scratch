@@ -6,6 +6,7 @@ from Layers.Base import *
 import numpy as np
 import pdb
 from Layers import Sigmoid, FullyConnected, TanH
+import copy
 
 
 class LSTM(base_layer):
@@ -48,6 +49,8 @@ class LSTM(base_layer):
 
     def forward(self, input_tensor):
         output_tensor = np.zeros((input_tensor.shape[0], self.output_size))
+
+        # activations
         self.o = []
         self.i = []
         self.f = []
@@ -55,21 +58,22 @@ class LSTM(base_layer):
         self.cell_state_b = []
         self.hidden_state_b = []
         self.tanh2_out = []
+        self.fully_middle_input = []
 
         if self._memorize == False:
             self.hidden_state = np.zeros((self.hidden_size))
             self.cell_state = np.zeros((self.hidden_size))
 
         self.cell_state_b.append(self.cell_state)
-        self.hidden_state_b.append(self.hidden_state)
+        self.hidden_state_b.append(np.zeros((self.hidden_size+1)))
 
         # giving inputs sequentially
         for idx, batch in enumerate(input_tensor):
         # Concatenation of input and previous hidden state
             X_tilda = np.concatenate([self.hidden_state, batch])
-
             # first fully connected layer
             fully_middle_out = self.fully_middle.forward(X_tilda)
+            self.fully_middle_input.append((self.fully_middle.input_tensor))
 
             '''deconcatenating to 4 vectors'''
             # Calculate forget gate
@@ -98,13 +102,14 @@ class LSTM(base_layer):
 
             # Calculate hidden state
             self.hidden_state = o * tanh2_out
-            self.hidden_state_b.append(self.hidden_state)
 
             # Calculate logits
             y = self.fully_out.forward(self.hidden_state)
+            self.hidden_state_b.append(self.fully_out.input_tensor)
             y = self.sigmoid4.forward(y)
             output_tensor[idx] = y
 
+        self.output_tensor = output_tensor
         return output_tensor
 
 
@@ -113,57 +118,69 @@ class LSTM(base_layer):
         gradient_input = np.zeros((error_tensor.shape[0], self.input_size))
 
         # initializing the hidden and cell state gradients
-        gradient_hidden = np.zeros((error_tensor.shape[0], self.hidden_size))
-        gradient_cell = np.zeros((error_tensor.shape[0], self.hidden_size))
-
-        # assign the optimizer of the LSTM to the optimizer of the fully connected
-        if self._optimizer:
-            self.fully_out.optimizer = self._optimizer
-            self.fully_middle.optimizer = self._optimizer
+        gradient_hidden = np.zeros((error_tensor.shape[0]+1, self.hidden_size))
+        gradient_cell = np.zeros((error_tensor.shape[0]+1, self.hidden_size))
+        gradient_weights_out = 0
+        gradient_weights_middle = 0
 
         # giving inputs sequentially
         for idx in reversed(range(len(error_tensor))):
 
             # gradient of output w.r.t input
+            self.sigmoid4.activation = self.output_tensor[idx]
             gradient_out_wrt_in = self.sigmoid4.backward(np.copy(error_tensor)[idx])
+            self.fully_out.input_tensor = self.hidden_state_b[idx]
             gradient_out_wrt_in = self.fully_out.backward(gradient_out_wrt_in)
+            gradient_weights_out += self.fully_out.gradient_weights
+            # fully_out_weights += self.fully_out.weights
 
             # gradient summing
             out_hidden = gradient_hidden[idx] + gradient_out_wrt_in
 
             # gradient output gate
             o_gradient = np.copy(out_hidden) * self.tanh2_out[idx]
+            self.sigmoid3.activation = self.o[idx]
             o_gradient = self.sigmoid3.backward(o_gradient)
 
             # gradient tanh2
             gradient_out_wrt_in_cell = np.copy(out_hidden) * self.o[idx]
+            self.tanh2.activation = self.tanh2_out[idx]
             gradient_out_wrt_in_cell = self.tanh2.backward(gradient_out_wrt_in_cell)
 
             # gradient summing
-            out_cell = gradient_out_wrt_in_cell + gradient_cell[idx]
+            out_cell = gradient_out_wrt_in_cell + gradient_cell[idx+1]
 
             '''gradient of the summation'''
             # gradient candidate
             C_tilda_gradient = np.copy(out_cell) * self.i[idx]
+            self.tanh1.activation = self.C_tilda[idx]
             C_tilda_gradient = self.tanh1.backward(C_tilda_gradient)
 
             # gradient input gate
             i_gradient = np.copy(out_cell) * self.C_tilda[idx]
+            self.sigmoid2.activation = self.i[idx]
             i_gradient = self.sigmoid2.backward(i_gradient)
 
             # gradient cell
-            gradient_cell[idx-1] = np.copy(out_cell) * self.f[idx]
+            gradient_cell[idx] = np.copy(out_cell) * self.f[idx]
 
             # gradient forget gate
-            f_gradient = np.copy(out_cell) * self.cell_state_b[idx - 1]
+            f_gradient = np.copy(out_cell) * self.cell_state_b[idx]
+            self.sigmoid1.activation = self.f[idx]
             f_gradient = self.sigmoid1.backward(f_gradient)
 
             # concatenation for the fully connected
+            self.fully_middle.input_tensor = self.fully_middle_input[idx]
             y = self.fully_middle.backward(np.concatenate([f_gradient, i_gradient, C_tilda_gradient, o_gradient]))
+            gradient_weights_middle += self.fully_middle.gradient_weights
 
             gradient_hidden[idx-1] = y[:self.hidden_size]
             gradient_input[idx] = y[self.hidden_size:]
 
+        if self._optimizer:
+            self.fully_out.weights = self._optimizer2.calculate_update(self.fully_out.weights, gradient_weights_out)
+            self.fully_middle.weights = self._optimizer.calculate_update(self.fully_middle.weights, gradient_weights_middle)
+        self.final_gradient_weights = gradient_weights_middle
         return gradient_input
 
 
@@ -193,7 +210,7 @@ class LSTM(base_layer):
 
     @property
     def gradient_weights(self):
-        return self.fully_middle.gradient_weights
+        return self.final_gradient_weights
     @gradient_weights.setter
     def gradient_weights(self, value):
         self.fully_middle.gradient_weights = value
@@ -217,6 +234,7 @@ class LSTM(base_layer):
     @optimizer.setter
     def optimizer(self, value):
         self._optimizer = value
+        self._optimizer2 = copy.deepcopy(self._optimizer)
     @optimizer.deleter
     def optimizer(self):
         del self._optimizer
