@@ -11,6 +11,8 @@ This repository contains 3 parts corresponding to the 3 exercises developed on t
 
 The main goal of the exercises was to develop fundamental blocks of neural networks such as different types of layers, optimizers and activations. This was done using good programming techniques such as efficient mathematical programming, object oriented programming, inheritance or polymorphism.
 
+The project is written in **Python 3.7**. No additional deep learning framework is used and most of the layers and functions are implemented only using **NumPy**.
+
 #### Overview of the project:
 
 
@@ -18,7 +20,7 @@ The main goal of the exercises was to develop fundamental blocks of neural netwo
 
 2. **Part 2 (Convolutional layer):** Basic blocks of Convolutional Neural Networks were devloped (`Conv` layer and `Pooling`). Several optimizers such as `SGD with Momentum` and `ADAM` were also developed.
 
-3. **Part 3 (Recurrent layer):** The classical `LSTM` Unit layer (basically the most used RNN architecture to date), which can be used in Recurrent Neural Networks was developed. Furthermore, more activations (such as `TanH` or `Sigmoid`) and more layers (like `Batch Normalization`) were developed.
+3. **Part 3 (Recurrent layer and Regularization):** The classical `LSTM` Unit layer (basically the most used RNN architecture to date), which can be used in Recurrent Neural Networks, was developed (including more activations such as `TanH` or `Sigmoid`. Also different regularization layers (like `Batch Normalization`, `Dropout`, `L1` and `L2` regulizers) were developed.
 
 Further information such as task descriptions and specifications can be found inside `Protocols`.
 
