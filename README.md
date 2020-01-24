@@ -22,7 +22,7 @@ The project is written in **Python 3.7**. No additional deep learning framework 
 
 3. **Part 3 (Recurrent layer and Regularization):** The classical `LSTM` Unit layer (basically the most used RNN architecture to date), which can be used in Recurrent Neural Networks, was developed (including more activations such as `TanH` or `Sigmoid`. Also different regularization layers (like `Batch Normalization`, `Dropout`, `L1` and `L2` regulizers) were developed.
 
-The main class running everything is `NeuralNetwork.py`. `NeuralNetworkTests.py` includes various unit tests for every layer and function.
+The main class running everything is `NeuralNetwork.py`. Various unit tests for every layer and function are included in `NeuralNetworkTests.py`.
 
 Further details such as task descriptions and specifications can be found inside ./Protocols directory.
 
