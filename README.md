@@ -26,3 +26,6 @@ The main class running everything is `NeuralNetwork.py`. Various unit tests for 
 
 Further details such as task descriptions and specifications can be found inside ./Protocols directory.
 
+### Miscellaneous
+In the `./Generator` directory, you can find an image generator which returns the input of a neural network each time it gets called.
+This input consists of a batch of images with different augmentations and its corresponding labels. 100 sample images are provided in the `./Generator/Sample_data` to test this generator.
