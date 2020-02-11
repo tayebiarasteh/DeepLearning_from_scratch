@@ -89,7 +89,6 @@ class BatchNormalization(base_layer):
             self.X_hat = X_hat
             out = self.weights.reshape((1, H, 1, 1)) * X_hat + self.bias.reshape((1, H, 1, 1))
 
-
         return out
 
 
@@ -101,23 +100,16 @@ class BatchNormalization(base_layer):
             self.gradient_weights = np.sum(error_tensor * self.X_hat, axis=(0,2,3))
             self.gradient_bias = np.sum(error_tensor, axis=(0,2,3))
 
-            '''Update with optimizers'''
-            if self._optimizer:
-                self.weights = self._optimizer.calculate_update(self.weights, self._gradient_weights)
-            if self._bias_optimizer:
-                self.bias = self._bias_optimizer.calculate_update(self.bias, self._gradient_bias)
-
-
-        if len(error_tensor.shape) == 2:
+        elif len(error_tensor.shape) == 2:
             out = compute_bn_gradients(error_tensor, self.input_tensor, self.weights, self.mean, self.variance, 1e-15)
             self.gradient_weights = np.sum(error_tensor * self.X_hat, axis=0)
             self.gradient_bias = np.sum(error_tensor, axis=0)
 
-            '''Update with optimizers'''
-            if self._optimizer:
-                self.weights = self._optimizer.calculate_update(self.weights, self._gradient_weights)
-            if self._bias_optimizer:
-                self.bias = self._bias_optimizer.calculate_update(self.bias, self._gradient_bias)
+        '''Update with optimizers'''
+        if self._optimizer:
+            self.weights = self._optimizer.calculate_update(self.weights, self._gradient_weights)
+        if self._bias_optimizer:
+            self.bias = self._bias_optimizer.calculate_update(self.bias, self._gradient_bias)
 
         return out
 
@@ -135,10 +127,8 @@ class BatchNormalization(base_layer):
             B, MN, H = out.shape
             out = out.reshape((B*MN, H))
 
-        # How to guess the B, M, N from the first dimension???????
-        # I put the values manually according to the unittest :D
+        # How to guess the B, M, N from the first dimension??
         if len(tensor.shape) == 2:
-            # pdb.set_trace()
             try:
                 B, H, M, N = self.input_shape
             except:
@@ -156,7 +146,6 @@ class BatchNormalization(base_layer):
 
 
 
-
     '''Properties'''
 
     @property
@@ -168,7 +157,6 @@ class BatchNormalization(base_layer):
     @gradient_weights.deleter
     def gradient_weights(self):
         del self._gradient_weights
-
 
     @property
     def gradient_bias(self):
@@ -189,7 +177,6 @@ class BatchNormalization(base_layer):
     @optimizer.deleter
     def optimizer(self):
         del self._optimizer
-
 
     @property
     def bias_optimizer(self):
