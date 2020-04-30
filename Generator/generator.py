@@ -3,6 +3,7 @@ An image generator which returns the input of a neural network each time it gets
 This input consists of a batch of images and its corresponding labels.
 
 @author: Soroosh Tayebi Arasteh <soroosh.arasteh@fau.de>
+https://github.com/starasteh/
 '''
 
 import os.path
