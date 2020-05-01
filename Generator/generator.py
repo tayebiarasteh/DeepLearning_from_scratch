@@ -1,4 +1,5 @@
 '''
+Created on November 2019.
 An image generator which returns the input of a neural network each time it gets called.
 This input consists of a batch of images and its corresponding labels.
 
