@@ -1,12 +1,12 @@
 # Deep Learning from scratch with NumPy
 
-### By Soroosh Tayebi Arasteh
+### By [Soroosh Tayebi Arasteh](https://github.com/starasteh)
 
 [![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/)
 [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
 [![](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/starasteh/DeepLearning_from_scratch/pulls)
 
-This project contains some of the programming exercises of the Deep Learning course (WS1920) offered by the [Pattern Recognition Lab (LME)](https://lme.tf.fau.de/) of the [Computer Science Department](https://www.informatik.uni-erlangen.de/) at University of Erlangen-Nuremberg (FAU).
+This project contains some of the programming exercises of the *Deep Learning* course (WS 2019-20, Prof. Dr.-Ing. habil. Andreas Maier) offered by the [Pattern Recognition Lab (LME)](https://lme.tf.fau.de/) of the [Computer Science Department](https://www.informatik.uni-erlangen.de/) at University of Erlangen-Nuremberg (FAU).
 
 
 
@@ -28,7 +28,7 @@ The project is written in **Python 3.7**. No additional deep learning framework 
 
 The main class running everything is `NeuralNetwork.py`. Various unit tests for every layer and function are included in `NeuralNetworkTests.py`.
 
-Further details such as task descriptions and specifications can be found inside ./Protocols directory.
+Further details such as task descriptions and specifications can be found inside *./Protocols/* directory.
 
 ### Miscellaneous
 In the `./Generator` directory, you can find an image generator which returns the input of a neural network each time it gets called.
