@@ -2,7 +2,7 @@
 Created on December 2019.
 
 @author: Soroosh Tayebi Arasteh <soroosh.arasteh@fau.de>
-https://github.com/starasteh/
+https://github.com/tayebiarasteh/
 '''
 
 import numpy as np
